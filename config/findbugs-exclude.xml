@@ -1,0 +1,16 @@
+<FindBugsFilter>
+  <!-- Example
+  <Match class="com.linecorp.clova.extension.boot.web.message.request.CEKRequest">
+    <Bug pattern="EI_EXPOSE_REP2"/>
+  </Match>
+  -->
+  <Match>
+    <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
+  </Match>
+  <Match>
+    <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
+  </Match>
+  <Match>
+    <Bug pattern="REC_CATCH_EXCEPTION"/>
+  </Match>
+</FindBugsFilter>

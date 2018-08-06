@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2018 LINE Corporation
+  ~
+  ~ LINE Corporation licenses this file to you under the Apache License,
+  ~ version 2.0 (the "License"); you may not use this file except in compliance
+  ~ with the License. You may obtain a copy of the License at:
+  ~
+  ~   https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.linecorp.clova</groupId>
+  <artifactId>clova-cek-sdk-java</artifactId>
+  <version>1.0.0</version>
+
+  <packaging>pom</packaging>
+  <name>clova-cek-sdk-java</name>
+  <description>Clova Extension SDK POM</description>
+  <url>https://github.com/line/clova-cek-sdk-java</url>
+
+  <organization>
+    <name>LINE Corporation</name>
+    <url>http://linecorp.com/en/</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+  <inceptionYear>2018</inceptionYear>
+
+  <scm>
+    <url>${project.url}</url>
+    <connection>scm:git:https://github.com/line/clova-cek-sdk-java.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/line/clova-cek-sdk-java.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
+  <developers>
+    <developer>
+      <id>linecorp.com</id>
+      <name>LINE Corporation</name>
+      <email>dl_oss_dev@linecorp.com</email>
+      <url>http://linecorp.com/en/</url>
+      <organization>LINE Corporation</organization>
+      <organizationUrl>https://engineering.linecorp.com/en/</organizationUrl>
+    </developer>
+  </developers>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <java.version>1.8</java.version>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <main.basedir>${basedir}</main.basedir>
+    <clova-cek-sdk.version>${project.version}</clova-cek-sdk.version>
+  </properties>
+
+  <modules>
+    <module>clova-extension-boot-web</module>
+    <module>clova-extension-test</module>
+    <module>clova-extension-model</module>
+  </modules>
+
+  <profiles>
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+    </profile>
+  </profiles>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <!-- Import dependency management from Spring Boot -->
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>2.0.4.RELEASE</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.linecorp.clova</groupId>
+        <artifactId>clova-extension-boot-web</artifactId>
+        <version>${clova-cek-sdk.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.linecorp.clova</groupId>
+        <artifactId>clova-extension-test</artifactId>
+        <version>${clova-cek-sdk.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.linecorp.clova</groupId>
+        <artifactId>clova-extension-model</artifactId>
+        <version>${clova-cek-sdk.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.7.0</version>
+          <configuration>
+            <compilerArgs>
+              <arg>-parameters</arg>
+            </compilerArgs>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.0.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.0.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <doclint>all,-missing</doclint>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.0</version>
+      </plugin>
+      <!-- FindBugs configuration. -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <version>3.0.5</version>
+        <executions>
+          <execution>
+            <phase>test</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <includeTests>true</includeTests>
+          <effort>Max</effort>
+          <failOnError>true</failOnError>
+          <xmlOutput>true</xmlOutput>
+          <excludeFilterFile>config/findbugs-exclude.xml</excludeFilterFile>
+        </configuration>
+      </plugin>
+      <!-- CheckStyle configuration. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.0.0</version>
+        <executions>
+          <execution>
+            <phase>test</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <configLocation>config/checkstyle.xml</configLocation>
+          <suppressionsLocation>config/checkstyle-suppressions.xml</suppressionsLocation>
+          <!-- Include or not the test source directory to be used for Checkstyle. -->
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
+          <!-- The lowest severity level that is considered a violation. Valid values are "error", "warning" and "info". -->
+          <violationSeverity>error</violationSeverity>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <reportSets>
+          <reportSet>
+            <reports>
+              <!-- select non-aggregate reports -->
+              <report>report</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+      </plugin>
+    </plugins>
+  </reporting>
+</project>

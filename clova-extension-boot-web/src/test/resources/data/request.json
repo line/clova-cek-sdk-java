@@ -1,0 +1,64 @@
+{
+  "version": "1.0",
+  "session": {
+    "sessionId": "2bcb5fac-3a51-4ce8-812d-3674ef7a701a",
+    "user": {
+      "userId": "V6Htd1UjREmIFY5tv6IfCQ",
+      "accessToken": "ddbd424b-6bb0-4baf-b9f5-ce2c303133fa"
+    },
+    "new": true,
+    "sessionAttributes": {}
+  },
+  "context": {
+    "AudioPlayer": {
+      "offsetInMilliseconds": 300000,
+      "playerActivity": "PLAYING",
+      "stream": {
+        "beginAtInMilliseconds": null,
+        "durationInMilliseconds": null,
+        "progressReport": {
+          "progressReportDelayInMilliseconds": null,
+          "progressReportIntervalInMilliseconds": null,
+          "progressReportPositionInMilliseconds": 60000
+        },
+        "token": "test token",
+        "url": "clova:test-url",
+        "urlPlayable": false
+      },
+      "totalInMilliseconds": 0
+    },
+    "System": {
+      "application": {
+        "applicationId": "${applicationId}"
+      },
+      "user": {
+        "userId": "V6Htd1UjREmIFY5tv6IfCQ",
+        "accessToken": "ddbd424b-6bb0-4baf-b9f5-ce2c303133fa"
+      },
+      "device": {
+        "deviceId": "05d87b6b-c814-40c8-843e-0d74ff7a8ec8",
+        "display": {
+          "size": "l100",
+          "orientation": "landscape",
+          "dpi": 96,
+          "contentLayer": {
+            "width": 640,
+            "height": 360
+          }
+        }
+      }
+    }
+  },
+  "request": {
+    "type": "${requestType}",
+    "intent": {
+      "name": "${intent}",
+      "slots": {}
+    },
+    "event": {
+      "namespace": "${event.namespace}",
+      "name": "${event.name}",
+      "payload": null
+    }
+  }
+}

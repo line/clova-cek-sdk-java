@@ -1,0 +1,11 @@
+{
+  "properties": [
+    {
+      "sourceType": "com.linecorp.clova.extension.boot.config.CEKVerifierProperties$Signature",
+      "name": "cek.verifier.signature.public-key",
+      "type": "org.springframework.core.io.Resource",
+      "description": "The public key file path.",
+      "defaultValue": "classpath:key/signature-public-key.pem"
+    }
+  ]
+}

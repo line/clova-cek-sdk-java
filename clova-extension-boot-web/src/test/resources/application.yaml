@@ -1,0 +1,21 @@
+spring:
+  messages:
+    basename: i18n/output-speech
+
+  jackson:
+    serialization:
+      indent_output: true
+
+cek:
+  api-path: /cek/v1
+  verifier:
+    signature:
+      enabled: false
+      public-key: classpath:key/signature-public-key.dev.pem
+    extension-id:
+      enabled: false
+      id: aaa, bbb, ccc
+
+logging:
+  level:
+    com.linecorp.clova: debug
