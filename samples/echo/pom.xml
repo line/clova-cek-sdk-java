@@ -45,7 +45,7 @@
     <dependency>
       <groupId>com.linecorp.clova</groupId>
       <artifactId>clova-extension-boot-web</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>1.0.0</version>
     </dependency>
 
     <dependency>

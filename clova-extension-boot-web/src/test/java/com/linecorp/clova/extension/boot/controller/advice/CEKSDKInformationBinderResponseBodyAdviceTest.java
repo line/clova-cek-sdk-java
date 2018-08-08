@@ -94,7 +94,7 @@ public class CEKSDKInformationBinderResponseBodyAdviceTest {
            .andExpect(jsonPath("$.meta.customExtensionSdk")
                               .value(CEKSDKInformationBinderResponseBodyAdvice.CEK_SDK_NAME))
            .andExpect(jsonPath("$.meta.customExtensionSdkVersion")
-                              .value("1.0.0-SNAPSHOT"));
+                              .value("1.0.0"));
 
         verify(handler).handle(eq(query));
     }
@@ -111,7 +111,7 @@ public class CEKSDKInformationBinderResponseBodyAdviceTest {
            .andExpect(jsonPath("$.meta.customExtensionSdk")
                               .value(CEKSDKInformationBinderResponseBodyAdvice.CEK_SDK_NAME))
            .andExpect(jsonPath("$.meta.customExtensionSdkVersion")
-                              .value("1.0.0-SNAPSHOT"));
+                              .value("1.0.0"));
 
         verify(handler, never()).handle(any());
     }
