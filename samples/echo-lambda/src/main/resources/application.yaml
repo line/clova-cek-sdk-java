@@ -1,0 +1,4 @@
+cek:
+  verifier:
+    signature:
+      enabled: false
