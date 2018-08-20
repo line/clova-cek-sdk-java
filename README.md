@@ -5,7 +5,7 @@
 [![javadoc.io](https://javadocio-badges.herokuapp.com/com.linecorp.clova/clova-extension-boot-web/badge.svg)](https://javadocio-badges.herokuapp.com/com.linecorp.clova/clova-extension-boot-web)
 
 
-This repository contains Java libraries for development of Clova extensions using the Clova Extension Kit(CEK).
+This repository contains Java libraries for development of Clova extensions using the Clova Extensions Kit(CEK).
   
 ## How to Develop
 
