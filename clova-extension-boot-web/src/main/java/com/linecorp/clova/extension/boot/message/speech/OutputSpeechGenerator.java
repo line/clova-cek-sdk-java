@@ -105,7 +105,6 @@ public class OutputSpeechGenerator {
      * @param locale the locale for {@link SpeechInfoObject}
      * @param args   additional information
      * @return the generated OutputSpeech, may be null if neither {@code .brief} nor {@code .verbose} exists
-     * @see <a href="https://pages.oss.navercorp.com/JTF-P6/platform_technical_doc/en/CEK/References/CEK_API.html">OutputSpeech.type</a>
      */
     public OutputSpeech generateFrom(Throwable t, Locale locale, Object... args) {
         MessageCodes messageCodes = getMessageCodes(t);
