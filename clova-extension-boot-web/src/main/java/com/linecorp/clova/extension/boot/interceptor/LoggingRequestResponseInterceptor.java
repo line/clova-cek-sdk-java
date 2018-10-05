@@ -181,7 +181,7 @@ public class LoggingRequestResponseInterceptor implements ClientHttpRequestInter
 
         private final Charset responseCharset;
 
-        private final String responseBodyAsText;
+        private final byte[] responseBodyBinary;
         private final String statusText;
         private final HttpStatus statusCode;
         private final HttpHeaders httpHeaders;
@@ -190,9 +190,9 @@ public class LoggingRequestResponseInterceptor implements ClientHttpRequestInter
             this.original = response;
             this.responseCharset = extractCharset(response.getHeaders());
 
-            this.responseBodyAsText = ignoreError(() -> {
+            this.responseBodyBinary = ignoreError(() -> {
                 try (InputStream body = response.getBody()) {
-                    return StreamUtils.copyToString(body, this.responseCharset);
+                    return StreamUtils.copyToByteArray(body);
                 }
             });
             this.statusText = ignoreError(response::getStatusText);
@@ -201,7 +201,11 @@ public class LoggingRequestResponseInterceptor implements ClientHttpRequestInter
         }
 
         ClientHttpResponse createRecycledClientHttpResponse() {
-            return new RecycledClientHttpResponse(this.original, this.responseBodyAsText, this.responseCharset);
+            return new RecycledClientHttpResponse(this.original, this.responseBodyBinary);
+        }
+
+        String getResponseBodyAsText() {
+            return new String(this.responseBodyBinary, this.responseCharset);
         }
 
         private static <T> T ignoreError(Callable<T> callable) {
@@ -217,8 +221,7 @@ public class LoggingRequestResponseInterceptor implements ClientHttpRequestInter
     private static class RecycledClientHttpResponse implements ClientHttpResponse {
 
         private final ClientHttpResponse original;
-        private final String responseBodyAsText;
-        private final Charset responseCharset;
+        private final byte[] responseBodyBinary;
 
         @Override
         public HttpHeaders getHeaders() {
@@ -227,7 +230,10 @@ public class LoggingRequestResponseInterceptor implements ClientHttpRequestInter
 
         @Override
         public InputStream getBody() throws IOException {
-            return new ByteArrayInputStream(this.responseBodyAsText.getBytes(this.responseCharset));
+            if (this.responseBodyBinary == null) {
+                return new ByteArrayInputStream(new byte[0]);
+            }
+            return new ByteArrayInputStream(this.responseBodyBinary);
         }
 
         @Override
