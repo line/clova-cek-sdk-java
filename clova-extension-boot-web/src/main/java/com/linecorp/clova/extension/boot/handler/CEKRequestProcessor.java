@@ -17,6 +17,7 @@
 package com.linecorp.clova.extension.boot.handler;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import com.linecorp.clova.extension.boot.message.request.CEKRequestMessage;
 import com.linecorp.clova.extension.boot.message.response.CEKResponseMessage;
@@ -32,11 +33,12 @@ public interface CEKRequestProcessor {
      * Processes the specified {@link CEKRequestMessage} and returns {@link CEKResponseMessage}.
      *
      * @param request        {@link HttpServletRequest}
+     * @param response       {@link HttpServletResponse}
      * @param requestMessage {@link CEKRequestMessage}
      * @return {@link CEKResponseMessage}
      * @throws Throwable Any throwables that occurred during processing.
      */
-    CEKResponseMessage process(@NonNull HttpServletRequest request, @NonNull CEKRequestMessage requestMessage)
-            throws Throwable;
+    CEKResponseMessage process(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+                               @NonNull CEKRequestMessage requestMessage) throws Throwable;
 
 }

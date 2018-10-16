@@ -32,6 +32,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.core.MethodParameter;
@@ -46,7 +47,6 @@ import org.springframework.validation.annotation.Validated;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.linecorp.clova.extension.boot.exception.CEKHandlerInterceptException;
-import com.linecorp.clova.extension.boot.exception.EmptyRequestMessageException;
 import com.linecorp.clova.extension.boot.exception.InvalidApplicationParameterException;
 import com.linecorp.clova.extension.boot.exception.MissingContextException;
 import com.linecorp.clova.extension.boot.exception.MissingRequiredParamException;
@@ -111,19 +111,16 @@ public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
     /**
      * Parses the CEK request, extracts the appropriate HandlerMethod, and executes it.
      *
-     * @param request {@link HttpServletRequest}
+     * @param request        {@link HttpServletRequest}
+     * @param response       {@link HttpServletResponse}
      * @param requestMessage {@link CEKRequestMessage}
-     *
      * @return {@link CEKResponseMessage}
      */
     @Override
     @SuppressWarnings({ "unchecked", "rawTypes" })
-    public CEKResponseMessage process(@NonNull HttpServletRequest request, CEKRequestMessage requestMessage)
-            throws Throwable {
-        if (requestMessage == null) {
-            throw new EmptyRequestMessageException();
-        }
-
+    public CEKResponseMessage process(@NonNull HttpServletRequest request,
+                                      @NonNull HttpServletResponse response,
+                                      @NonNull CEKRequestMessage requestMessage) throws Throwable {
         RequestType requestType = getRequestType(requestMessage.getRequest());
         String requestName = Optional.ofNullable(requestMessage.getRequest())
                                      .map(CEKRequest::getName)
@@ -159,6 +156,12 @@ public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
         Object[] args =
                 handlerMethod.getMethodParams().stream()
                              .map(methodParam -> {
+                                 if (methodParam.getParameterType().isInstance(request)) {
+                                     return request;
+                                 }
+                                 if (methodParam.getParameterType().isInstance(response)) {
+                                     return response;
+                                 }
                                  if (CEKRequestMessage.Session.class == methodParam
                                          .getParameterType()) {
                                      return requestMessage.getSession();

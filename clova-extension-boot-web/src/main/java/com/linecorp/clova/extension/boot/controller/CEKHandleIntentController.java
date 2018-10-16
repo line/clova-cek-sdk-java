@@ -19,6 +19,7 @@ package com.linecorp.clova.extension.boot.controller;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,13 +54,15 @@ public class CEKHandleIntentController {
      * The handler method for a CEK Request.
      *
      * @param request     {@link HttpServletRequest}
+     * @param response    {@link HttpServletResponse}
      * @param requestBody The CEK Request body as text.
      * @return The CEK Response
      * @throws Throwable Any errors in this application process.
      * @see CEKProperties#apiPath
      */
     @PostMapping("${cek.api-path:/}")
-    public CEKResponseMessage handle(HttpServletRequest request, @RequestBody String requestBody)
+    public CEKResponseMessage handle(HttpServletRequest request, HttpServletResponse response,
+                                     @RequestBody String requestBody)
             throws Throwable {
         if (log.isDebugEnabled()) {
             log.debug("CEK Payload --> {}", requestBody);
@@ -68,7 +71,7 @@ public class CEKHandleIntentController {
         CEKRequestMessage requestMessage = objectMapper.readValue(requestBody, CEKRequestMessage.class);
         LocaleContextHolder.setLocale(defaultClientLocale, true);
 
-        return requestProcessor.process(request, requestMessage);
+        return requestProcessor.process(request, response, requestMessage);
     }
 
 }
