@@ -21,30 +21,45 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Repeatable;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.aop.framework.AopProxyUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
 import com.linecorp.clova.extension.boot.exception.UnsupportedHandlerArgumentException;
+import com.linecorp.clova.extension.boot.handler.annnotation.CEKHandleCondition;
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestHandler;
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestMapping;
 import com.linecorp.clova.extension.boot.handler.condition.CEKHandleConditionMatcher;
+import com.linecorp.clova.extension.boot.handler.condition.CEKHandleConditionMatcherFactory;
 import com.linecorp.clova.extension.boot.message.request.RequestType;
 import com.linecorp.clova.extension.boot.message.response.CEKResponse;
 import com.linecorp.clova.extension.boot.util.StringUtils;
@@ -71,7 +86,8 @@ public class CEKRequestMappingHandlerMapping implements BeanFactoryAware, Initia
     /**
      * Initializes the mapping of the Handler Methods.
      * <p>
-     * Extracts Handler Methods from the annotated classes annotated of {@link CEKRequestHandler @CEKRequestHandler}.
+     * Extracts Handler Methods from the annotated classes annotated of {@link CEKRequestHandler
+     * &#64;CEKRequestHandler}.
      */
     @Override
     public void afterPropertiesSet() {
@@ -91,6 +107,8 @@ public class CEKRequestMappingHandlerMapping implements BeanFactoryAware, Initia
     private List<CEKHandlerMethod> extractHandlerMethods(Object requestHandler) {
         Class<?> beanType = getOriginalBeanType(requestHandler);
         List<CEKHandlerMethod> handlerMethods = new ArrayList<>();
+
+        Set<CEKHandleConditionMatcher> handlerConditionMatchers = conditionMatchers(beanType);
 
         ReflectionUtils.doWithMethods(beanType, method -> {
             CEKRequestMapping methodAnnotation =
@@ -121,13 +139,16 @@ public class CEKRequestMappingHandlerMapping implements BeanFactoryAware, Initia
 
             method.setAccessible(true);
 
+            Set<CEKHandleConditionMatcher> methodConditionMatchers = conditionMatchers(method);
+
             CEKHandlerMethod handlerMethod = CEKHandlerMethod.builder()
                                                              .requestType(methodAnnotation.type())
                                                              .bean(requestHandler)
                                                              .method(method)
                                                              .name(name)
                                                              .methodParams(methodParams)
-                                                             .conditionMatchers(conditionMatchers(method))
+                                                             .handlerConditionMatchers(handlerConditionMatchers)
+                                                             .methodConditionMatchers(methodConditionMatchers)
                                                              .build();
 
             handlerMethods.add(handlerMethod);
@@ -151,8 +172,103 @@ public class CEKRequestMappingHandlerMapping implements BeanFactoryAware, Initia
         return beanType;
     }
 
-    protected Set<CEKHandleConditionMatcher> conditionMatchers(Method method) {
-        return Collections.emptySet();
+    @SuppressWarnings({ "unchecked", "rawTypes" })
+    Set<CEKHandleConditionMatcher> conditionMatchers(Object beanTypeOrMethod) {
+        Assert.isTrue(beanTypeOrMethod instanceof Class || beanTypeOrMethod instanceof Method,
+                      "beanTypeOrMethod should be Class or Method. "
+                      + "[beanTypeOrMethod:" + beanTypeOrMethod + "]");
+
+        Set<CEKHandleConditionMatcher> matchers = new HashSet<>();
+        for (Map.Entry<Class<? extends CEKHandleConditionMatcherFactory>, Set<Annotation>> entry
+                : extractConditionMatcherFactories(beanTypeOrMethod).entrySet()) {
+            CEKHandleConditionMatcher matcher = createHandleConditionMatcher(entry.getKey(), entry.getValue());
+            matchers.add(matcher);
+        }
+        return matchers;
+    }
+
+    <F extends CEKHandleConditionMatcherFactory<M, A>,
+            M extends CEKHandleConditionMatcher,
+            A extends Annotation>
+    M createHandleConditionMatcher(Class<F> factoryType, Collection<A> annotations) {
+        F factory;
+        try {
+            factory = beanFactory.getBean(factoryType);
+        } catch (NoSuchBeanDefinitionException e) {
+            factory = BeanUtils.instantiateClass(factoryType);
+        }
+        return factory.create(annotations);
+    }
+
+    @SuppressWarnings("rawTypes")
+    static Map<Class<? extends CEKHandleConditionMatcherFactory>, Set<Annotation>>
+    extractConditionMatcherFactories(Object beanTypeOrMethod) {
+        Assert.isTrue(beanTypeOrMethod instanceof Class || beanTypeOrMethod instanceof Method,
+                      "beanTypeOrMethod should be Class or Method. "
+                      + "[beanTypeOrMethod:" + beanTypeOrMethod + "]");
+
+        Annotation[] annotations = AnnotationUtils.getAnnotations((AnnotatedElement) beanTypeOrMethod);
+
+        if (annotations == null || annotations.length == 0) {
+            return Collections.emptyMap();
+        }
+
+        return Arrays.stream(annotations)
+                     .flatMap(annotation -> searchCEKHandleCondition(annotation).stream())
+                     .collect(groupingBy(annotation -> annotation.annotationType()
+                                                                 .getAnnotation(CEKHandleCondition.class)
+                                                                 .value(),
+                                         mapping(Function.identity(), Collectors.toSet())));
+    }
+
+    static Collection<Annotation> searchCEKHandleCondition(Annotation annotation) {
+        Set<Annotation> annotations = new LinkedHashSet<>();
+        if (annotation.annotationType().isAnnotationPresent(CEKHandleCondition.class)) {
+            annotations.add(annotation);
+            return annotations;
+        }
+        for (Annotation breakDownedAnnotation : breakDownIfRepeatable(annotation)) {
+            if (breakDownedAnnotation.annotationType().isAnnotationPresent(CEKHandleCondition.class)) {
+                annotations.add(breakDownedAnnotation);
+            }
+            Annotation[] metaAnnotations = AnnotationUtils.getAnnotations(
+                    breakDownedAnnotation.annotationType());
+            if (metaAnnotations == null || metaAnnotations.length == 0) {
+                continue;
+            }
+            Arrays.stream(metaAnnotations)
+                  .filter(metaAnnotation -> !metaAnnotation.annotationType().getName()
+                                                           .startsWith("java.lang.annotation"))
+                  .map(CEKRequestMappingHandlerMapping::searchCEKHandleCondition)
+                  .forEach(annotations::addAll);
+        }
+        return annotations;
+    }
+
+    static Collection<Annotation> breakDownIfRepeatable(Annotation annotation) {
+        Object value = AnnotationUtils.getValue(annotation);
+        if (value == null) {
+            return Collections.singleton(annotation);
+        }
+        if (!value.getClass().isArray()) {
+            return Collections.singleton(annotation);
+        }
+        Object[] annotations = (Object[]) value;
+        if (annotations.length == 0) {
+            return Collections.singleton(annotation);
+        }
+
+        if (!Arrays.stream(annotations)
+                   .findFirst()
+                   .filter(Annotation.class::isInstance)
+                   .map(Annotation.class::cast)
+                   .map(repeating -> repeating.annotationType().getAnnotation(Repeatable.class))
+                   .filter(repeatable -> repeatable.value().isInstance(annotation))
+                   .isPresent()) {
+            return Collections.singleton(annotation);
+        }
+
+        return Arrays.asList((Annotation[]) annotations);
     }
 
 }
