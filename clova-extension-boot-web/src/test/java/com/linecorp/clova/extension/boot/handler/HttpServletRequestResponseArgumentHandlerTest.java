@@ -46,7 +46,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.Configuration;
 
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestHandler;
 import com.linecorp.clova.extension.boot.handler.annnotation.IntentMapping;
@@ -92,10 +91,6 @@ public class HttpServletRequestResponseArgumentHandlerTest {
     @Autowired
     ObjectMapper objectMapper;
 
-    @Autowired
-    @SuppressWarnings("SpringJavaAutowiringInspection")
-    Configuration configuration;
-
     @Before
     public void setUp() {
         reset(handler);
@@ -105,9 +100,7 @@ public class HttpServletRequestResponseArgumentHandlerTest {
     @Test
     public void handleRequestOnly() throws Exception {
         MvcResult mvcResult = mvc.perform(post("/cek/v1")
-                                                  .content(CEKRequestGenerator.requestBodyBuilder(
-                                                          "data/request.json",
-                                                          configuration)
+                                                  .content(CEKRequestGenerator.requestBodyBuilder()
                                                                               .intent("RequestOnly")
                                                                               .build())
                                                   .contentType(MediaType.APPLICATION_JSON))
@@ -122,9 +115,7 @@ public class HttpServletRequestResponseArgumentHandlerTest {
     @Test
     public void handleResponseOnly() throws Exception {
         MvcResult mvcResult = mvc.perform(post("/cek/v1")
-                                                  .content(CEKRequestGenerator.requestBodyBuilder(
-                                                          "data/request.json",
-                                                          configuration)
+                                                  .content(CEKRequestGenerator.requestBodyBuilder()
                                                                               .intent("ResponseOnly")
                                                                               .build())
                                                   .contentType(MediaType.APPLICATION_JSON))
@@ -139,9 +130,7 @@ public class HttpServletRequestResponseArgumentHandlerTest {
     @Test
     public void handleRequestAndResponse() throws Exception {
         MvcResult mvcResult = mvc.perform(post("/cek/v1")
-                                                  .content(CEKRequestGenerator.requestBodyBuilder(
-                                                          "data/request.json",
-                                                          configuration)
+                                                  .content(CEKRequestGenerator.requestBodyBuilder()
                                                                               .intent("RequestAndResponse")
                                                                               .build())
                                                   .contentType(MediaType.APPLICATION_JSON))

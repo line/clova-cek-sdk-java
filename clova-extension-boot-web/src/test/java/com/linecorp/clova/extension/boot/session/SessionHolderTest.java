@@ -49,7 +49,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
-import com.jayway.jsonpath.Configuration;
 
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestHandler;
 import com.linecorp.clova.extension.boot.handler.annnotation.IntentMapping;
@@ -99,9 +98,6 @@ public class SessionHolderTest {
     @Autowired
     ObjectMapper objectMapper;
 
-    @Autowired
-    Configuration configuration;
-
     @Before
     public void setUp() {
         reset(handler);
@@ -113,7 +109,7 @@ public class SessionHolderTest {
         doCallRealMethod().when(handler).handle(captor.capture());
 
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("SessionHolder")
                                                         .build())
                             .contentType(MediaType.APPLICATION_JSON))
@@ -148,7 +144,7 @@ public class SessionHolderTest {
         }).when(handler).handle(captor.capture());
 
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("SessionHolder")
                                                         .sessionAttribute("data1", data1)
                                                         .build())

@@ -66,7 +66,7 @@ public class SessionEndedHandlerTest {
     @Test
     public void handleSessionEnded() throws Exception {
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json")
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .sessionEnded()
                                                         .build())
                             .contentType(MediaType.APPLICATION_JSON))

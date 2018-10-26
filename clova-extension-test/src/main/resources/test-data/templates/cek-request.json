@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "session": {
+    "sessionId": "${sessionId}",
+    "user": {
+      "userId": "${sessionUserId}",
+      "accessToken": "${sessionAccessToken}"
+    },
+    "new": true,
+    "sessionAttributes": {}
+  },
+  "context": {
+    "System": {
+      "application": {
+        "applicationId": "${applicationId}"
+      },
+      "user": {
+        "userId": "${userId}",
+        "accessToken": "${accessToken}"
+      },
+      "device": {
+        "deviceId": "${deviceId}",
+        "display": {
+          "size": "l100",
+          "orientation": "landscape",
+          "dpi": 96,
+          "contentLayer": {
+            "width": 640,
+            "height": 360
+          }
+        }
+      }
+    }
+  },
+  "request": {}
+}

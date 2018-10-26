@@ -27,6 +27,9 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,10 +38,6 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.JsonPath;
 
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestHandler;
 import com.linecorp.clova.extension.boot.handler.annnotation.ContextValue;
@@ -80,25 +79,25 @@ public class SupportCamelParameterNameHandlerTest {
     @SpyBean
     TestConfig.TestHandler handler;
 
-    @Autowired
-    ObjectMapper objectMapper;
-
-    @Autowired
-    @SuppressWarnings("SpringJavaAutowiringInspection")
-    Configuration configuration;
+    @Captor
+    ArgumentCaptor<AudioPlayerContext> audioPlayerCaptor;
 
     @Before
     public void setUp() {
         reset(handler);
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
     public void handleOtherName() throws Exception {
-        String expectedQuery = RandomStringUtils.randomAlphanumeric(100);
+        String query = RandomStringUtils.randomAlphanumeric(100);
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        AudioPlayerContext audioPlayer = CEKRequestGenerator.createContext(AudioPlayerContext.class);
+
+        String body = CEKRequestGenerator.requestBodyBuilder()
+                                         .context("AudioPlayer", audioPlayer)
                                          .intent("IntentOtherName")
-                                         .slot("audio_query", expectedQuery)
+                                         .slot("audio_query", query)
                                          .build();
 
         mvc.perform(post("/cek/v1")
@@ -107,19 +106,14 @@ public class SupportCamelParameterNameHandlerTest {
            .andDo(print())
            .andExpect(status().isOk());
 
-        AudioPlayerContext expectedAudioPlayer = JsonPath.using(configuration)
-                                                         .parse(body)
-                                                         .read("$.context.AudioPlayer",
-                                                               AudioPlayerContext.class);
-
-        verify(handler).handleOtherName(eq(expectedAudioPlayer), eq(expectedQuery));
+        verify(handler).handleOtherName(eq(audioPlayer), eq(query));
     }
 
     @Test
     public void handleCamelToCamel() throws Exception {
         String expectedQuery = RandomStringUtils.randomAlphanumeric(100);
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("IntentToCamel")
                                          .slot("audioQuery", expectedQuery)
                                          .build();
@@ -137,7 +131,7 @@ public class SupportCamelParameterNameHandlerTest {
     public void handlePascalToCamel() throws Exception {
         String expectedQuery = RandomStringUtils.randomAlphanumeric(100);
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("IntentToCamel")
                                          .slot("AudioQuery", expectedQuery)
                                          .build();
@@ -155,7 +149,7 @@ public class SupportCamelParameterNameHandlerTest {
     public void handleLowerSnakeToCamel() throws Exception {
         String expectedQuery = RandomStringUtils.randomAlphanumeric(100);
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("IntentToCamel")
                                          .slot("audio_query", expectedQuery)
                                          .build();
@@ -173,7 +167,7 @@ public class SupportCamelParameterNameHandlerTest {
     public void handleUpperSnakeToCamel() throws Exception {
         String expectedQuery = RandomStringUtils.randomAlphanumeric(100);
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("IntentToCamel")
                                          .slot("AUDIO_QUERY", expectedQuery)
                                          .build();
@@ -191,7 +185,7 @@ public class SupportCamelParameterNameHandlerTest {
     public void handleLowerKebabToCamel() throws Exception {
         String expectedQuery = RandomStringUtils.randomAlphanumeric(100);
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("IntentToCamel")
                                          .slot("audio-query", expectedQuery)
                                          .build();
@@ -209,7 +203,7 @@ public class SupportCamelParameterNameHandlerTest {
     public void handleUpperKebabToCamel() throws Exception {
         String expectedQuery = RandomStringUtils.randomAlphanumeric(100);
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("IntentToCamel")
                                          .slot("AUDIO-QUERY", expectedQuery)
                                          .build();

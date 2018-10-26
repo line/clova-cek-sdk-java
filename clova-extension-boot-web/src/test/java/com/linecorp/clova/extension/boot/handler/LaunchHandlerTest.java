@@ -66,7 +66,7 @@ public class LaunchHandlerTest {
     @Test
     public void handleLaunch() throws Exception {
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json")
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .launch()
                                                         .build())
                             .contentType(MediaType.APPLICATION_JSON))

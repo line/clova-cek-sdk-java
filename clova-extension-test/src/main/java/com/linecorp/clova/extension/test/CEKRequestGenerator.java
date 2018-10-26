@@ -26,7 +26,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -35,10 +34,19 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy.SnakeCaseStrategy;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
+import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 
+import com.linecorp.clova.extension.boot.message.context.ContextProperty;
 import com.linecorp.clova.extension.boot.message.request.RequestType;
 import com.linecorp.clova.extension.boot.message.request.SlotValueInterval;
 import com.linecorp.clova.extension.boot.message.request.SlotValueType;
@@ -53,12 +61,12 @@ import lombok.NoArgsConstructor;
  */
 public class CEKRequestGenerator {
 
-    private static final Map<String, String> DEFAULT_PLACEHOLDER;
+    private static final String DEFAULT_TEMPLATE_PATH = "test-data/templates";
+    private static final String DEFAULT_REQUEST_TEMPLATE_PATH = DEFAULT_TEMPLATE_PATH + "/cek-request.json";
+    private static final ObjectMapper DEFAULT_MAPPER = Jackson2ObjectMapperBuilder.json().build();
 
-    static {
-        Map<String, String> defaultPlaceholder = new HashMap<>();
-        defaultPlaceholder.put("requestType", RequestType.INTENT.getValue());
-        DEFAULT_PLACEHOLDER = Collections.unmodifiableMap(defaultPlaceholder);
+    public static RequestBodyBuilder requestBodyBuilder() {
+        return new RequestBodyBuilder();
     }
 
     /**
@@ -78,7 +86,9 @@ public class CEKRequestGenerator {
      * @param path          JSON template path (placed in classpath)
      * @param configuration configuration for JSON serialization
      * @return {@link RequestBodyBuilder}
+     * @deprecated Use {@link #requestBodyBuilder(String, ObjectMapper)} instead of this.
      */
+    @Deprecated
     public static RequestBodyBuilder requestBodyBuilder(String path, Configuration configuration) {
         return new RequestBodyBuilder()
                 .resource(path)
@@ -86,16 +96,62 @@ public class CEKRequestGenerator {
     }
 
     /**
+     * Constructs {@link RequestBodyBuilder} with JSON template path.
+     *
+     * @param objectMapper For JSON serialization
+     * @return {@link RequestBodyBuilder}
+     */
+    public static RequestBodyBuilder requestBodyBuilder(ObjectMapper objectMapper) {
+        return new RequestBodyBuilder()
+                .objectMapper(objectMapper);
+    }
+
+    /**
+     * Constructs {@link RequestBodyBuilder} with JSON template path.
+     *
+     * @param path         JSON template path (placed in classpath)
+     * @param objectMapper For JSON serialization
+     * @return {@link RequestBodyBuilder}
+     */
+    public static RequestBodyBuilder requestBodyBuilder(String path, ObjectMapper objectMapper) {
+        return new RequestBodyBuilder()
+                .resource(path)
+                .objectMapper(objectMapper);
+    }
+
+    public static <P extends ContextProperty> P createContext(Class<P> contextType) {
+        return createContext(contextType, DEFAULT_MAPPER);
+    }
+
+    public static <P extends ContextProperty> P createContext(Class<P> contextType, ObjectMapper objectMapper) {
+        String fileName = ((SnakeCaseStrategy) PropertyNamingStrategy.SNAKE_CASE)
+                .translate(contextType.getSimpleName());
+        if (fileName.endsWith("_context")) {
+            fileName = fileName.substring(0, fileName.length() - "_context".length());
+        }
+
+        String filePath = DEFAULT_TEMPLATE_PATH + "/" + fileName + ".json";
+        try {
+            return objectMapper.readValue(new ClassPathResource(filePath).getInputStream(), contextType);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    /**
      * Builder of CEK request.
      */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class RequestBodyBuilder {
-        private String path;
+        private String path = DEFAULT_REQUEST_TEMPLATE_PATH;
+        private ObjectMapper objectMapper = DEFAULT_MAPPER;
+
         private Charset resourceCharset = StandardCharsets.UTF_8;
-        private Map<String, Object> placeholder = new HashMap<>(DEFAULT_PLACEHOLDER);
+        private Map<String, Object> placeholder = new HashMap<>();
         private Map<String, List<Object>> additionalArrays = new HashMap<>();
         private Map<String, Object> additionalObjects = new HashMap<>();
         private Collection<String> removePaths = new HashSet<>();
+
         private Configuration configuration;
 
         /**
@@ -104,8 +160,19 @@ public class CEKRequestGenerator {
          * @param path JSON template path (placed in classpath)
          * @return this instance
          */
-        private RequestBodyBuilder resource(String path) {
+        RequestBodyBuilder resource(String path) {
             this.path = path;
+            return this;
+        }
+
+        /**
+         * Sets {@link ObjectMapper}.
+         *
+         * @param objectMapper {@link ObjectMapper}
+         * @return this instance
+         */
+        RequestBodyBuilder objectMapper(ObjectMapper objectMapper) {
+            this.objectMapper = objectMapper;
             return this;
         }
 
@@ -122,6 +189,10 @@ public class CEKRequestGenerator {
             return this;
         }
 
+        public RequestBodyBuilder context(String name, ContextProperty context) {
+            return put("$.context." + name, context);
+        }
+
         /**
          * Sets request type.
          * <p>
@@ -131,8 +202,7 @@ public class CEKRequestGenerator {
          * @return this instance
          */
         private RequestBodyBuilder requestType(RequestType requestType) {
-            this.placeholder.put("requestType", requestType.getValue());
-            return this;
+            return put("$.request.type", requestType.getValue());
         }
 
         /**
@@ -161,7 +231,7 @@ public class CEKRequestGenerator {
          */
         public RequestBodyBuilder intent(String intentName) {
             return requestType(RequestType.INTENT)
-                    .placeholder("intent", intentName);
+                    .put("$.request.intent.name", intentName);
         }
 
         /**
@@ -172,9 +242,10 @@ public class CEKRequestGenerator {
          * @return this instance
          */
         public RequestBodyBuilder event(String event) {
+            String[] eventNamespaceAndName = event.split("\\.");
             return requestType(RequestType.EVENT)
-                    .placeholder("event.namespace", event.split("\\.")[0])
-                    .placeholder("event.name", event.split("\\.")[1]);
+                    .put("$.request.event.namespace", eventNamespaceAndName[0])
+                    .put("$.request.event.name", eventNamespaceAndName[1]);
         }
 
         public RequestBodyBuilder placeholder(String key, Object value) {
@@ -198,6 +269,11 @@ public class CEKRequestGenerator {
             return this;
         }
 
+        /**
+         * @deprecated Use {@link #requestBodyBuilder(ObjectMapper)} or {@link #requestBodyBuilder(String,
+         * ObjectMapper)} instead of this.
+         */
+        @Deprecated
         public RequestBodyBuilder configuration(Configuration configuration) {
             this.configuration = configuration;
             return this;
@@ -231,8 +307,15 @@ public class CEKRequestGenerator {
             return this;
         }
 
+        public RequestBodyBuilder customize(RequestBodyBuilderCustomizer customizer) {
+            customizer.custom(this);
+            return this;
+        }
+
         @SuppressWarnings("rawTypes")
         public String build() {
+            Configuration configuration = getConfiguration();
+
             try (InputStream in = CEKRequestGenerator.class.getClassLoader().getResourceAsStream(this.path)) {
                 try (BufferedReader reader = new BufferedReader(
                         new InputStreamReader(in, this.resourceCharset))) {
@@ -244,9 +327,7 @@ public class CEKRequestGenerator {
                     }
 
                     if (!this.additionalArrays.isEmpty()) {
-                        DocumentContext documentContext = this.configuration != null
-                                                          ? JsonPath.using(configuration).parse(body)
-                                                          : JsonPath.parse(body);
+                        DocumentContext documentContext = JsonPath.using(configuration).parse(body);
                         this.additionalArrays.forEach((path, list) -> {
                             String cleanPath = cleanPath(path);
                             initPathIfAbsent(documentContext, cleanPath + "[]");
@@ -256,9 +337,7 @@ public class CEKRequestGenerator {
                     }
 
                     if (!this.additionalObjects.isEmpty()) {
-                        DocumentContext documentContext = this.configuration != null
-                                                          ? JsonPath.using(configuration).parse(body)
-                                                          : JsonPath.parse(body);
+                        DocumentContext documentContext = JsonPath.using(configuration).parse(body);
                         this.additionalObjects.forEach((path, value) -> {
                             String cleanPath = cleanPath(path);
                             initPathIfAbsent(documentContext, cleanPath);
@@ -268,9 +347,7 @@ public class CEKRequestGenerator {
                     }
 
                     if (!this.removePaths.isEmpty()) {
-                        DocumentContext documentContext = this.configuration != null
-                                                          ? JsonPath.using(configuration).parse(body)
-                                                          : JsonPath.parse(body);
+                        DocumentContext documentContext = JsonPath.using(configuration).parse(body);
                         this.removePaths.stream()
                                         .map(RequestBodyBuilder::cleanPath)
                                         .forEach(documentContext::delete);
@@ -283,6 +360,18 @@ public class CEKRequestGenerator {
             } catch (IOException e) {
                 throw new IllegalArgumentException(e);
             }
+        }
+
+        private Configuration getConfiguration() {
+            if (this.configuration == null) {
+                this.configuration =
+                        Configuration.builder()
+                                     .mappingProvider(new JacksonMappingProvider(this.objectMapper))
+                                     .jsonProvider(new JacksonJsonProvider(this.objectMapper))
+                                     .build();
+            }
+
+            return this.configuration;
         }
 
         @SuppressWarnings("rawTypes")
@@ -324,6 +413,13 @@ public class CEKRequestGenerator {
             String[] split = path.split("\\.");
             return split[split.length - 1];
         }
+
+    }
+
+    @FunctionalInterface
+    public interface RequestBodyBuilderCustomizer {
+
+        void custom(RequestBodyBuilder builder);
 
     }
 

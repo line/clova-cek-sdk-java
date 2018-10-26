@@ -56,7 +56,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.Configuration;
 
 import com.linecorp.clova.extension.boot.handler.SlotHandlerTest.TestConfig.TestHandler;
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestHandler;
@@ -204,10 +203,6 @@ public class SlotHandlerTest {
     @Autowired
     ObjectMapper objectMapper;
 
-    @Autowired
-    @SuppressWarnings("SpringJavaAutowiringInspection")
-    Configuration configuration;
-
     Random random = new Random();
 
     @After
@@ -221,9 +216,9 @@ public class SlotHandlerTest {
     }
 
     @Test
-    public void handleHasOptionalSlot_noSlot() throws Exception {
+    public void handleHasOptionalSlotValue_noSlot() throws Exception {
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("HasOptionalSlotValue")
                                                         .build())
                             .contentType(MediaType.APPLICATION_JSON))
@@ -235,11 +230,11 @@ public class SlotHandlerTest {
     }
 
     @Test
-    public void handleHasOptionalSlot_hasSlot() throws Exception {
+    public void handleHasOptionalSlotValue_hasSlot() throws Exception {
         String query = RandomStringUtils.randomAlphabetic(10);
 
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("HasOptionalSlotValue")
                                                         .slot("query", query)
                                                         .build())
@@ -252,9 +247,9 @@ public class SlotHandlerTest {
     }
 
     @Test
-    public void handleHasNotRequiredSlot_noSlot() throws Exception {
+    public void handleHasNotRequiredSlotValue_noSlot() throws Exception {
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("HasNotRequiredSlotValue")
                                                         .build())
                             .contentType(MediaType.APPLICATION_JSON))
@@ -266,11 +261,11 @@ public class SlotHandlerTest {
     }
 
     @Test
-    public void handleHasNotRequiredSlot_hasSlot() throws Exception {
+    public void handleHasNotRequiredSlotValue_hasSlot() throws Exception {
         String query = RandomStringUtils.randomAlphabetic(10);
 
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("HasNotRequiredSlotValue")
                                                         .slot("query", query)
                                                         .build())
@@ -283,9 +278,9 @@ public class SlotHandlerTest {
     }
 
     @Test
-    public void handleHasRequireSlot_noSlot() throws Exception {
+    public void handleHasRequireSlotValue_noSlot() throws Exception {
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("HasRequiredSlotValue")
                                                         .build())
                             .contentType(MediaType.APPLICATION_JSON))
@@ -297,11 +292,11 @@ public class SlotHandlerTest {
     }
 
     @Test
-    public void handleHasRequiredSlot_hasSlot() throws Exception {
+    public void handleHasRequiredSlotValue_hasSlot() throws Exception {
         String query = RandomStringUtils.randomAlphabetic(10);
 
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("HasRequiredSlotValue")
                                                         .slot("query", query)
                                                         .build())
@@ -318,7 +313,7 @@ public class SlotHandlerTest {
     @Test
     public void handleStringSlotValue() throws Exception {
         String slot = RandomStringUtils.randomAlphabetic(10);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("StringSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -336,7 +331,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleStringSlotValue_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("StringSlotValue")
                                          .build();
 
@@ -355,7 +350,7 @@ public class SlotHandlerTest {
     public void handleStringSlotValue_LocalDate() throws Exception {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalDate slot = LocalDate.now().plusDays(days);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("StringSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -376,7 +371,7 @@ public class SlotHandlerTest {
     @Test
     public void handleOptionalStringSlotValue() throws Exception {
         String slot = RandomStringUtils.randomAlphabetic(10);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalStringSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -394,7 +389,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleOptionalStringSlotValue_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalStringSlotValue")
                                          .build();
 
@@ -413,7 +408,7 @@ public class SlotHandlerTest {
     public void handleOptionalStringSlotValue_LocalDate() throws Exception {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalDate slot = LocalDate.now().plusDays(days);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalStringSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -434,7 +429,7 @@ public class SlotHandlerTest {
     @Test
     public void handleStringSlot() throws Exception {
         String slot = RandomStringUtils.randomAlphabetic(10);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("StringSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -456,7 +451,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleStringSlot_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("StringSlot")
                                          .build();
 
@@ -475,7 +470,7 @@ public class SlotHandlerTest {
     public void handleStringSlot_LocalDate() throws Exception {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalDate slot = LocalDate.now().plusDays(days);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("StringSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -500,7 +495,7 @@ public class SlotHandlerTest {
     @Test
     public void handleOptionalStringSlot() throws Exception {
         String slot = RandomStringUtils.randomAlphabetic(10);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalStringSlot")
                                          .slot("Slot", slot)
                                          .build();
@@ -522,7 +517,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleOptionalStringSlot_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalStringSlot")
                                          .build();
 
@@ -541,7 +536,7 @@ public class SlotHandlerTest {
     public void handleOptionalStringSlot_LocalTime() throws Exception {
         int minutes = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalTime slot = LocalTime.now().plusMinutes(minutes).truncatedTo(ChronoUnit.SECONDS);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalStringSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -568,7 +563,7 @@ public class SlotHandlerTest {
         LocalDate start = LocalDate.now().minusDays(random.nextInt(20));
         LocalDate end = LocalDate.now().plusDays(random.nextInt(20));
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalLocalDateIntervalSlot")
                                          .slot("slot", new SlotValueInterval<>(start, end))
                                          .build();
@@ -599,7 +594,7 @@ public class SlotHandlerTest {
         LocalTime end = LocalTime.now().plusMinutes(random.nextInt(20))
                                  .truncatedTo(ChronoUnit.SECONDS);
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalLocalTimeIntervalSlotValue")
                                          .slot("slot", new SlotValueInterval<>(start, end))
                                          .build();
@@ -631,7 +626,7 @@ public class SlotHandlerTest {
                                            .truncatedTo(ChronoUnit.SECONDS)
                                            .withOffsetSameInstant(ZoneOffset.ofHours(9));
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OffsetDateTimeIntervalSlot")
                                          .slot("slot", new SlotValueInterval<>(start, end))
                                          .build();
@@ -658,7 +653,7 @@ public class SlotHandlerTest {
     public void handleLocalDateSlotValue() throws Exception {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalDate slot = LocalDate.now().plusDays(days);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("LocalDateSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -676,7 +671,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleLocalDateSlotValue_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("LocalDateSlotValue")
                                          .build();
 
@@ -697,7 +692,7 @@ public class SlotHandlerTest {
     public void handleOptionalLocalTimeSlotValue() throws Exception {
         int minutes = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalTime slot = LocalTime.now().plusMinutes(minutes).truncatedTo(ChronoUnit.SECONDS);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalLocalTimeSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -717,7 +712,7 @@ public class SlotHandlerTest {
     public void handleOptionalLocalTimeSlotValue_date() throws Exception {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalDate slot = LocalDate.now().plusDays(days);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalLocalTimeSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -735,7 +730,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleOptionalLocalTimeSlotValue_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalLocalTimeSlotValue")
                                          .build();
 
@@ -756,7 +751,7 @@ public class SlotHandlerTest {
     public void handleLocalDateSlot() throws Exception {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalDate slot = LocalDate.now().plusDays(days);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("LocalDateSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -780,7 +775,7 @@ public class SlotHandlerTest {
     public void handleLocalDateSlot_time() throws Exception {
         int minutes = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalTime slot = LocalTime.now().plusMinutes(minutes).truncatedTo(ChronoUnit.SECONDS);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("LocalDateSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -798,7 +793,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleLocalDateSlot_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("LocalDateSlot")
                                          .build();
 
@@ -820,7 +815,7 @@ public class SlotHandlerTest {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         OffsetDateTime slot = OffsetDateTime.now().plusDays(days).truncatedTo(ChronoUnit.SECONDS)
                                             .withOffsetSameInstant(ZoneOffset.ofHours(9));
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalOffsetDateTimeSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -842,7 +837,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleOptionalOffsetDateTimeSlot_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalOffsetDateTimeSlot")
                                          .build();
 
@@ -862,7 +857,7 @@ public class SlotHandlerTest {
     @Test
     public void handleRandomDataSlotValue() throws Exception {
         RandomData slot = new RandomData();
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("RandomDataSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -880,7 +875,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleRandomDataSlotValue_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("RandomDataSlotValue")
                                          .build();
 
@@ -900,7 +895,7 @@ public class SlotHandlerTest {
     @Test
     public void handleOptionalRandomDataSlotValue() throws Exception {
         RandomData slot = new RandomData();
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalRandomDataSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -918,7 +913,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleOptionalRandomDataSlotValue_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalRandomDataSlotValue")
                                          .build();
 
@@ -938,7 +933,7 @@ public class SlotHandlerTest {
     @Test
     public void handleRandomDataSlot() throws Exception {
         RandomData slot = new RandomData();
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("RandomDataSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -960,7 +955,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleRandomDataSlot_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("RandomDataSlot")
                                          .build();
 
@@ -980,7 +975,7 @@ public class SlotHandlerTest {
     @Test
     public void handleOptionalRandomDataSlot() throws Exception {
         RandomData slot = new RandomData();
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalRandomDataSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -1002,7 +997,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleOptionalRandomDataSlot_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalRandomDataSlot")
                                          .build();
 
@@ -1021,7 +1016,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleObjectSlotValue_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlotValue")
                                          .build();
 
@@ -1040,7 +1035,7 @@ public class SlotHandlerTest {
     @Test
     public void handleObjectSlotValue_String() throws Exception {
         String slot = RandomStringUtils.randomAlphabetic(10);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -1060,7 +1055,7 @@ public class SlotHandlerTest {
     @Test
     public void handleObjectSlotValue_RandomData() throws Exception {
         RandomData slot = new RandomData();
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -1082,7 +1077,7 @@ public class SlotHandlerTest {
         String[] slot = new String[] {
                 RandomStringUtils.randomNumeric(10), RandomStringUtils.randomNumeric(10)
         };
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -1103,7 +1098,7 @@ public class SlotHandlerTest {
     public void handleObjectSlotValue_LocalDate() throws Exception {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalDate slot = LocalDate.now().plusDays(days);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -1124,7 +1119,7 @@ public class SlotHandlerTest {
     public void handleObjectSlotValue_LocalTime() throws Exception {
         int minutes = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalTime slot = LocalTime.now().plusMinutes(minutes).truncatedTo(ChronoUnit.SECONDS);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -1146,7 +1141,7 @@ public class SlotHandlerTest {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         OffsetDateTime slot = OffsetDateTime.now().plusDays(days).truncatedTo(ChronoUnit.SECONDS)
                                             .withOffsetSameInstant(ZoneOffset.ofHours(9));
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -1167,7 +1162,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleOptionalObjectSlotValue_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlotValue")
                                          .build();
 
@@ -1186,7 +1181,7 @@ public class SlotHandlerTest {
     @Test
     public void handleOptionalObjectSlotValue_String() throws Exception {
         String slot = RandomStringUtils.randomAlphabetic(10);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -1206,7 +1201,7 @@ public class SlotHandlerTest {
     @Test
     public void handleOptionalObjectSlotValue_RandomData() throws Exception {
         RandomData slot = new RandomData();
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -1228,7 +1223,7 @@ public class SlotHandlerTest {
         String[] slot = new String[] {
                 RandomStringUtils.randomNumeric(10), RandomStringUtils.randomNumeric(10)
         };
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -1249,7 +1244,7 @@ public class SlotHandlerTest {
     public void handleOptionalObjectSlotValue_LocalDate() throws Exception {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalDate slot = LocalDate.now().plusDays(days);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -1270,7 +1265,7 @@ public class SlotHandlerTest {
     public void handleOptionalObjectSlotValue_LocalTime() throws Exception {
         int minutes = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalTime slot = LocalTime.now().plusMinutes(minutes).truncatedTo(ChronoUnit.SECONDS);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -1292,7 +1287,7 @@ public class SlotHandlerTest {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         OffsetDateTime slot = OffsetDateTime.now().plusDays(days).truncatedTo(ChronoUnit.SECONDS)
                                             .withOffsetSameInstant(ZoneOffset.ofHours(9));
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlotValue")
                                          .slot("slot", slot)
                                          .build();
@@ -1313,7 +1308,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleObjectSlot_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlot")
                                          .build();
 
@@ -1332,7 +1327,7 @@ public class SlotHandlerTest {
     @Test
     public void handleObjectSlot_String() throws Exception {
         String slot = RandomStringUtils.randomAlphabetic(10);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -1356,7 +1351,7 @@ public class SlotHandlerTest {
     @Test
     public void handleObjectSlot_RandomData() throws Exception {
         RandomData slot = new RandomData();
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -1382,7 +1377,7 @@ public class SlotHandlerTest {
         String[] slot = new String[] {
                 RandomStringUtils.randomNumeric(10), RandomStringUtils.randomNumeric(10)
         };
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -1407,7 +1402,7 @@ public class SlotHandlerTest {
     public void handleObjectSlot_LocalDate() throws Exception {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalDate slot = LocalDate.now().plusDays(days);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -1432,7 +1427,7 @@ public class SlotHandlerTest {
     public void handleObjectSlot_LocalTime() throws Exception {
         int minutes = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalTime slot = LocalTime.now().plusMinutes(minutes).truncatedTo(ChronoUnit.SECONDS);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -1458,7 +1453,7 @@ public class SlotHandlerTest {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         OffsetDateTime slot = OffsetDateTime.now().plusDays(days).truncatedTo(ChronoUnit.SECONDS)
                                             .withOffsetSameInstant(ZoneOffset.ofHours(9));
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("ObjectSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -1483,7 +1478,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleOptionalObjectSlot_empty() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlot")
                                          .build();
 
@@ -1502,7 +1497,7 @@ public class SlotHandlerTest {
     @Test
     public void handleOptionalObjectSlot_String() throws Exception {
         String slot = RandomStringUtils.randomAlphabetic(10);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -1526,7 +1521,7 @@ public class SlotHandlerTest {
     @Test
     public void handleOptionalObjectSlot_RandomData() throws Exception {
         RandomData slot = new RandomData();
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -1552,7 +1547,7 @@ public class SlotHandlerTest {
         String[] slot = new String[] {
                 RandomStringUtils.randomNumeric(10), RandomStringUtils.randomNumeric(10)
         };
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -1577,7 +1572,7 @@ public class SlotHandlerTest {
     public void handleOptionalObjectSlot_LocalDate() throws Exception {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalDate slot = LocalDate.now().plusDays(days);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -1602,7 +1597,7 @@ public class SlotHandlerTest {
     public void handleOptionalObjectSlot_LocalTime() throws Exception {
         int minutes = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         LocalTime slot = LocalTime.now().plusMinutes(minutes).truncatedTo(ChronoUnit.SECONDS);
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlot")
                                          .slot("slot", slot)
                                          .build();
@@ -1628,7 +1623,7 @@ public class SlotHandlerTest {
         int days = random.nextInt(20) * (random.nextBoolean() ? 1 : -1);
         OffsetDateTime slot = OffsetDateTime.now().plusDays(days).truncatedTo(ChronoUnit.SECONDS)
                                             .withOffsetSameInstant(ZoneOffset.ofHours(9));
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("OptionalObjectSlot")
                                          .slot("slot", slot)
                                          .build();

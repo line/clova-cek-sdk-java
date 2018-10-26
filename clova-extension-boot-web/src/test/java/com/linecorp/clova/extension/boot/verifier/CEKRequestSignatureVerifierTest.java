@@ -47,13 +47,15 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.StreamUtils;
 
-import com.jayway.jsonpath.Configuration;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.linecorp.clova.extension.boot.controller.advice.CEKHandleIntentControllerAdvice;
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestHandler;
 import com.linecorp.clova.extension.boot.handler.annnotation.IntentMapping;
+import com.linecorp.clova.extension.boot.message.request.RequestType;
 import com.linecorp.clova.extension.boot.message.response.CEKResponse;
 import com.linecorp.clova.extension.test.CEKRequestGenerator;
+import com.linecorp.clova.extension.test.CEKRequestGenerator.RequestBodyBuilderCustomizer;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -82,7 +84,7 @@ public class CEKRequestSignatureVerifierTest {
     TestConfig.TestHandler handler;
 
     @Autowired
-    Configuration configuration;
+    ObjectMapper objectMapper;
 
     @SpyBean
     CEKHandleIntentControllerAdvice advice;
@@ -100,10 +102,13 @@ public class CEKRequestSignatureVerifierTest {
     public void test_noHeader() throws Throwable {
         doCallRealMethod().when(advice).handle(captor.capture());
 
+        String body = CEKRequestGenerator.requestBodyBuilder("data/signature_test_request.json",
+                                                             objectMapper)
+                                         .customize(bindIntentRequest())
+                                         .build();
+
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
-                                                        .intent("CEKRequestSignatureVerifierTest")
-                                                        .build())
+                            .content(body)
                             .contentType(MediaType.APPLICATION_JSON))
            .andDo(print())
            .andExpect(status().isBadRequest());
@@ -118,11 +123,14 @@ public class CEKRequestSignatureVerifierTest {
     public void test_hasSignatureHeader_wrongSignature() throws Throwable {
         doCallRealMethod().when(advice).handle(captor.capture());
 
+        String body = CEKRequestGenerator.requestBodyBuilder("data/signature_test_request.json",
+                                                             objectMapper)
+                                         .customize(bindIntentRequest())
+                                         .build();
+
         mvc.perform(post("/cek/v1")
                             .header(CLOVA_SIGNATURE_REQUEST_HEADER, RandomStringUtils.randomAlphabetic(10))
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
-                                                        .intent("CEKRequestSignatureVerifierTest")
-                                                        .build())
+                            .content(body)
                             .contentType(MediaType.APPLICATION_JSON))
            .andDo(print())
            .andExpect(status().isBadRequest());
@@ -138,16 +146,24 @@ public class CEKRequestSignatureVerifierTest {
         String signature = StreamUtils.copyToString(new ClassPathResource("data/signature").getInputStream(),
                                                     StandardCharsets.UTF_8).trim();
 
+        String body = CEKRequestGenerator.requestBodyBuilder("data/signature_test_request.json",
+                                                             objectMapper)
+                                         .customize(bindIntentRequest())
+                                         .build();
+
         mvc.perform(post("/cek/v1")
                             .header(CLOVA_SIGNATURE_REQUEST_HEADER, signature)
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
-                                                        .intent("CEKRequestSignatureVerifierTest")
-                                                        .build())
+                            .content(body)
                             .contentType(MediaType.APPLICATION_JSON))
            .andDo(print())
            .andExpect(status().isOk());
 
         verify(handler).handleSignatureVerificationTest();
+    }
+
+    private static RequestBodyBuilderCustomizer bindIntentRequest() {
+        return builder -> builder.placeholder("requestType", RequestType.INTENT.getValue())
+                                 .placeholder("intent", "CEKRequestSignatureVerifierTest");
     }
 
 }

@@ -112,7 +112,7 @@ public class SessionAttributesHandlerTest {
         String param = RandomStringUtils.randomAlphanumeric(10);
 
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json")
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("StringParam")
                                                         .sessionAttribute("param", param)
                                                         .build())
@@ -127,7 +127,7 @@ public class SessionAttributesHandlerTest {
     public void handleIntegerParam() throws Exception {
         Integer param = RandomUtils.nextInt();
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json")
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("IntegerParam")
                                                         .sessionAttribute("param", param)
                                                         .build())
@@ -145,7 +145,7 @@ public class SessionAttributesHandlerTest {
         param.setKey2(RandomUtils.nextInt());
 
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json")
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("ObjectParam")
                                                         .sessionAttribute("param", param)
                                                         .build())
@@ -161,7 +161,7 @@ public class SessionAttributesHandlerTest {
         String param = RandomStringUtils.randomAlphanumeric(20);
 
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json")
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("StringWithKey")
                                                         .sessionAttribute("param", param)
                                                         .build())
@@ -179,7 +179,7 @@ public class SessionAttributesHandlerTest {
         param.setKey2(RandomUtils.nextInt());
 
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json")
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("ObjectWithKey")
                                                         .sessionAttribute("param", param)
                                                         .build())
@@ -197,7 +197,7 @@ public class SessionAttributesHandlerTest {
         param.setKey2(RandomUtils.nextInt());
 
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json")
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("OptionalObjectWithKey")
                                                         .sessionAttribute("param", param)
                                                         .build())
@@ -211,7 +211,7 @@ public class SessionAttributesHandlerTest {
     @Test
     public void handleOptionalObjectWithKey_empty() throws Exception {
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json")
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("OptionalObjectWithKey")
                                                         .build())
                             .contentType(MediaType.APPLICATION_JSON))

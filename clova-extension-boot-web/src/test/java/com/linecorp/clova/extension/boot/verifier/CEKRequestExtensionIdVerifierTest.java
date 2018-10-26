@@ -48,8 +48,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.StreamUtils;
 
-import com.jayway.jsonpath.Configuration;
-
 import com.linecorp.clova.extension.boot.controller.advice.CEKHandleIntentControllerAdvice;
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestHandler;
 import com.linecorp.clova.extension.boot.handler.annnotation.IntentMapping;
@@ -82,9 +80,6 @@ public class CEKRequestExtensionIdVerifierTest {
     @SpyBean
     TestConfig.TestHandler handler;
 
-    @Autowired
-    Configuration configuration;
-
     @SpyBean
     CEKHandleIntentControllerAdvice advice;
 
@@ -102,7 +97,7 @@ public class CEKRequestExtensionIdVerifierTest {
         doCallRealMethod().when(advice).handle(captor.capture());
 
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("CEKRequestExtensionIdVerifierTest")
                                                         .remove("$.context.System.application.applicationId")
                                                         .build())
@@ -124,7 +119,7 @@ public class CEKRequestExtensionIdVerifierTest {
 
         mvc.perform(post("/cek/v1")
                             .header(CLOVA_SIGNATURE_REQUEST_HEADER, RandomStringUtils.randomAlphabetic(10))
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("CEKRequestExtensionIdVerifierTest")
                                                         .placeholder("applicationId", applicationId)
                                                         .build())
@@ -146,7 +141,7 @@ public class CEKRequestExtensionIdVerifierTest {
 
         mvc.perform(post("/cek/v1")
                             .header(CLOVA_SIGNATURE_REQUEST_HEADER, signature)
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("CEKRequestExtensionIdVerifierTest")
                                                         .placeholder("applicationId", "bbb")
                                                         .build())
