@@ -17,7 +17,6 @@
 package com.linecorp.clova.extension.boot.handler;
 
 import java.io.Serializable;
-import java.util.Set;
 
 import lombok.Data;
 
@@ -27,7 +26,5 @@ public class CEKRequestKey implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String key;
-
-    private Set<String> paramNameAndTypes;
 
 }

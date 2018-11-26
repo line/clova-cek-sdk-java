@@ -45,7 +45,6 @@ import com.linecorp.clova.extension.boot.message.context.SystemContext;
 import com.linecorp.clova.extension.boot.message.request.CEKRequest;
 import com.linecorp.clova.extension.boot.message.request.CEKRequestMessage;
 import com.linecorp.clova.extension.boot.message.request.EventRequest;
-import com.linecorp.clova.extension.boot.message.request.IntentRequest;
 import com.linecorp.clova.extension.boot.message.request.RequestType;
 import com.linecorp.clova.extension.boot.message.response.CEKResponse;
 import com.linecorp.clova.extension.boot.message.response.CEKResponseMessage;
@@ -305,23 +304,6 @@ public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
     private static CEKRequestKey createKey(CEKRequest request) {
         CEKRequestKey requestKey = new CEKRequestKey();
         requestKey.setKey(request.getName());
-
-        if (request instanceof IntentRequest) {
-            IntentRequest intentRequest = (IntentRequest) request;
-            if (intentRequest.getIntent().getSlots() != null
-                && !intentRequest.getIntent().getSlots().isEmpty()) {
-                Set<String> paramNameAndTypes =
-                        intentRequest.getIntent().getSlots().entrySet().stream()
-                                     .filter(entry -> entry.getValue().getValueType() != null)
-                                     .map(entry -> entry.getKey() + "@"
-                                                   + entry.getValue().getValueType().name().toLowerCase())
-                                     .collect(Collectors.toSet());
-                requestKey.setParamNameAndTypes(paramNameAndTypes);
-            }
-        }
-        if (requestKey.getParamNameAndTypes() == null) {
-            requestKey.setParamNameAndTypes(Collections.emptySet());
-        }
         return requestKey;
     }
 

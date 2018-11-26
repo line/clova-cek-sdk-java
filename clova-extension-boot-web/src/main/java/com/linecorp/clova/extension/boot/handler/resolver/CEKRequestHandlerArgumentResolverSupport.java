@@ -210,7 +210,7 @@ public abstract class CEKRequestHandlerArgumentResolverSupport implements CEKReq
         }
 
         if (CollectionUtils.isEmpty(paramsWithName.getParams()) || paramValue == null) {
-            if (annotation == null || (boolean) AnnotationUtils.getValue(annotation, "required")) {
+            if (hasRequiredOrValueIsTrue(annotation)) {
                 throw throwerIfMissing.convert(name);
             } else {
                 return null;
@@ -218,6 +218,17 @@ public abstract class CEKRequestHandlerArgumentResolverSupport implements CEKReq
         }
 
         return convertValue(paramValue, methodParam);
+    }
+
+    private static boolean hasRequiredOrValueIsTrue(Annotation annotation) {
+        if (annotation == null) {
+            return true;
+        }
+        Boolean required = (Boolean) AnnotationUtils.getValue(annotation, "required");
+        if (required == null) {
+            return true;
+        }
+        return required;
     }
 
     /**
