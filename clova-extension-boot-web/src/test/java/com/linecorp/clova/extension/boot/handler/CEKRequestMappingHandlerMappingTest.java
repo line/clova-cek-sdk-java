@@ -28,6 +28,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -73,7 +74,7 @@ public class CEKRequestMappingHandlerMappingTest {
 
         @Bean
         CEKRequestMappingHandlerMapping cekRequestMappingHandlerMapping() {
-            return new CEKRequestMappingHandlerMapping();
+            return new CEKRequestMappingHandlerMapping(Collections.emptyList());
         }
 
         @Bean

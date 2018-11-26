@@ -51,6 +51,18 @@ import com.linecorp.clova.extension.boot.handler.CEKRequestHandlerDispatcher;
 import com.linecorp.clova.extension.boot.handler.CEKRequestMappingHandlerMapping;
 import com.linecorp.clova.extension.boot.handler.CEKRequestProcessor;
 import com.linecorp.clova.extension.boot.handler.interceptor.CEKHandlerInterceptor;
+import com.linecorp.clova.extension.boot.handler.resolver.CEKContextPropertyArgumentResolver;
+import com.linecorp.clova.extension.boot.handler.resolver.CEKEventPayloadArgumentResolver;
+import com.linecorp.clova.extension.boot.handler.resolver.CEKEventRequestArgumentResolver;
+import com.linecorp.clova.extension.boot.handler.resolver.CEKIntentRequestArgumentResolver;
+import com.linecorp.clova.extension.boot.handler.resolver.CEKRequestHandlerArgumentResolver;
+import com.linecorp.clova.extension.boot.handler.resolver.CEKRequestTypeArgumentResolver;
+import com.linecorp.clova.extension.boot.handler.resolver.CEKSessionArgumentResolver;
+import com.linecorp.clova.extension.boot.handler.resolver.CEKSessionHolderArgumentResolver;
+import com.linecorp.clova.extension.boot.handler.resolver.CEKSessionValueArgumentResolver;
+import com.linecorp.clova.extension.boot.handler.resolver.CEKSlotValueArgumentResolver;
+import com.linecorp.clova.extension.boot.handler.resolver.HttpServletRequestArgumentResolver;
+import com.linecorp.clova.extension.boot.handler.resolver.HttpServletResponseArgumentResolver;
 import com.linecorp.clova.extension.boot.message.speech.OutputSpeechGenerator;
 import com.linecorp.clova.extension.boot.verifier.CEKRequestVerifier;
 
@@ -111,8 +123,9 @@ public class CEKWebAutoConfiguration {
     }
 
     @Bean
-    CEKRequestMappingHandlerMapping cekRequestMappingHandlerMapping() {
-        return new CEKRequestMappingHandlerMapping();
+    CEKRequestMappingHandlerMapping cekRequestMappingHandlerMapping(
+            List<CEKRequestHandlerArgumentResolver> argumentResolvers) {
+        return new CEKRequestMappingHandlerMapping(argumentResolvers);
     }
 
     @Bean
@@ -141,6 +154,66 @@ public class CEKWebAutoConfiguration {
         return (int) Optional.ofNullable(AnnotatedElementUtils.getMergedAnnotation(beanType, Order.class))
                              .map(AnnotationUtils::getValue)
                              .orElse(Ordered.LOWEST_PRECEDENCE);
+    }
+
+    @Configuration
+    static class ArgumentResolverConfig {
+
+        @Bean
+        CEKContextPropertyArgumentResolver cekContextPropertyArgumentResolver(ObjectMapper objectMapper) {
+            return new CEKContextPropertyArgumentResolver(objectMapper);
+        }
+
+        @Bean
+        CEKEventPayloadArgumentResolver cekEventPayloadArgumentResolver(ObjectMapper objectMapper) {
+            return new CEKEventPayloadArgumentResolver(objectMapper);
+        }
+
+        @Bean
+        CEKEventRequestArgumentResolver cekEventRequestArgumentResolver() {
+            return new CEKEventRequestArgumentResolver();
+        }
+
+        @Bean
+        CEKIntentRequestArgumentResolver cekIntentRequestArgumentResolver() {
+            return new CEKIntentRequestArgumentResolver();
+        }
+
+        @Bean
+        CEKRequestTypeArgumentResolver cekRequestTypeArgumentResolver() {
+            return new CEKRequestTypeArgumentResolver();
+        }
+
+        @Bean
+        CEKSessionArgumentResolver cekSessionArgumentResolver() {
+            return new CEKSessionArgumentResolver();
+        }
+
+        @Bean
+        CEKSessionHolderArgumentResolver cekSessionHolderArgumentResolver(ObjectMapper objectMapper) {
+            return new CEKSessionHolderArgumentResolver(objectMapper);
+        }
+
+        @Bean
+        CEKSessionValueArgumentResolver cekSessionValueArgumentResolver(ObjectMapper objectMapper) {
+            return new CEKSessionValueArgumentResolver(objectMapper);
+        }
+
+        @Bean
+        CEKSlotValueArgumentResolver cekSlotValueArgumentResolver(ObjectMapper objectMapper) {
+            return new CEKSlotValueArgumentResolver(objectMapper);
+        }
+
+        @Bean
+        HttpServletRequestArgumentResolver httpServletRequestArgumentResolver() {
+            return new HttpServletRequestArgumentResolver();
+        }
+
+        @Bean
+        HttpServletResponseArgumentResolver httpServletResponseArgumentResolver() {
+            return new HttpServletResponseArgumentResolver();
+        }
+
     }
 
 }

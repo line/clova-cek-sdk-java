@@ -16,29 +16,21 @@
 
 package com.linecorp.clova.extension.boot.handler;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.springframework.core.MethodParameter;
-import org.springframework.core.ResolvableType;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.SmartValidator;
 import org.springframework.validation.annotation.Validated;
@@ -46,34 +38,19 @@ import org.springframework.validation.annotation.Validated;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.linecorp.clova.extension.boot.exception.CEKHandlerInterceptException;
-import com.linecorp.clova.extension.boot.exception.EmptyRequestMessageException;
-import com.linecorp.clova.extension.boot.exception.InvalidApplicationParameterException;
-import com.linecorp.clova.extension.boot.exception.MissingContextException;
-import com.linecorp.clova.extension.boot.exception.MissingRequiredParamException;
-import com.linecorp.clova.extension.boot.exception.MissingSessionAttributeException;
-import com.linecorp.clova.extension.boot.exception.MissingSlotException;
 import com.linecorp.clova.extension.boot.exception.RequestHandlerNotFoundException;
 import com.linecorp.clova.extension.boot.exception.TooManyMatchedRequestHandlersException;
-import com.linecorp.clova.extension.boot.exception.UnsupportedHandlerArgumentException;
-import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestParam;
-import com.linecorp.clova.extension.boot.handler.annnotation.ContextValue;
-import com.linecorp.clova.extension.boot.handler.annnotation.SessionValue;
-import com.linecorp.clova.extension.boot.handler.annnotation.SlotValue;
 import com.linecorp.clova.extension.boot.handler.interceptor.CEKHandlerInterceptor;
-import com.linecorp.clova.extension.boot.message.context.ContextProperty;
 import com.linecorp.clova.extension.boot.message.context.SystemContext;
-import com.linecorp.clova.extension.boot.message.payload.Payload;
 import com.linecorp.clova.extension.boot.message.request.CEKRequest;
 import com.linecorp.clova.extension.boot.message.request.CEKRequestMessage;
 import com.linecorp.clova.extension.boot.message.request.EventRequest;
 import com.linecorp.clova.extension.boot.message.request.IntentRequest;
-import com.linecorp.clova.extension.boot.message.request.IntentRequest.Intent.Slot;
 import com.linecorp.clova.extension.boot.message.request.RequestType;
 import com.linecorp.clova.extension.boot.message.response.CEKResponse;
 import com.linecorp.clova.extension.boot.message.response.CEKResponseMessage;
 import com.linecorp.clova.extension.boot.session.SessionHolder;
 import com.linecorp.clova.extension.boot.util.RequestUtils;
-import com.linecorp.clova.extension.boot.util.StringUtils;
 import com.linecorp.clova.extension.boot.verifier.CEKRequestVerifier;
 
 import lombok.NonNull;
@@ -87,17 +64,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
-
-    private static final Map<Predicate<String>, UnaryOperator<String>> CAMEL_CONVERTERS_BY_CONDITION;
-
-    static {
-        CAMEL_CONVERTERS_BY_CONDITION = new HashMap<>();
-        CAMEL_CONVERTERS_BY_CONDITION.put(StringUtils::isPascalCase, StringUtils::pascalToCamel);
-        CAMEL_CONVERTERS_BY_CONDITION.put(StringUtils::isLowerSnakeCase, StringUtils::lowerSnakeToCamel);
-        CAMEL_CONVERTERS_BY_CONDITION.put(StringUtils::isUpperSnakeCase, StringUtils::upperSnakeToCamel);
-        CAMEL_CONVERTERS_BY_CONDITION.put(StringUtils::isLowerKebabCase, StringUtils::lowerKebabToCamel);
-        CAMEL_CONVERTERS_BY_CONDITION.put(StringUtils::isUpperKebabCase, StringUtils::upperKebabToCamel);
-    }
 
     private final CEKRequestMappingHandlerMapping handlerMapping;
     private final SmartValidator validator;
@@ -119,10 +85,6 @@ public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
     @SuppressWarnings({ "unchecked", "rawTypes" })
     public CEKResponseMessage process(@NonNull HttpServletRequest request, CEKRequestMessage requestMessage)
             throws Throwable {
-        if (requestMessage == null) {
-            throw new EmptyRequestMessageException();
-        }
-
         RequestType requestType = getRequestType(requestMessage.getRequest());
         String requestName = Optional.ofNullable(requestMessage.getRequest())
                                      .map(CEKRequest::getName)
@@ -150,123 +112,17 @@ public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
                     requestMessage.getRequest().getName());
         }
 
-        Map<String, Object> contexts = requestMessage.getContext();
-
         requestMessage.getSession().toReadOnly();
-        SessionHolder sessionHolder = new SessionHolder(objectMapper, requestMessage.getSession());
+        Object[] args = handlerMethod.resolveArguments(requestMessage);
 
-        Object[] args =
-                handlerMethod.getMethodParams().stream()
-                             .map(methodParam -> {
-                                 if (CEKRequestMessage.Session.class == methodParam
-                                         .getParameterType()) {
-                                     return requestMessage.getSession();
-                                 }
-                                 if (SessionHolder.class == methodParam.getParameterType()) {
-                                     return sessionHolder;
-                                 }
-                                 if (canConvert(SystemContext.class, methodParam)) {
-                                     if (Optional.class.isAssignableFrom(methodParam.getParameterType())) {
-                                         return Optional.of(system);
-                                     }
-                                     return system;
-                                 }
-                                 if (methodParam.hasParameterAnnotation(ContextValue.class)) {
-                                     if (!canConvert(ContextProperty.class, methodParam)) {
-                                         throw new UnsupportedHandlerArgumentException(
-                                                 methodParam,
-                                                 "Parameter annotated with ContextValue should be"
-                                                 + " implemented ContextProperty."); //TODO: Extract mapper func
-                                     }
-                                     return extractAndConvertMethodParam(contexts, methodParam,
-                                                                         MissingContextException::new);
-                                 }
-                                 if (canConvert(ContextProperty.class, methodParam)) {
-                                     return extractAndConvertMethodParam(contexts, methodParam,
-                                                                         MissingContextException::new);
-                                 }
-                                 if (methodParam.hasParameterAnnotation(SessionValue.class)) {
-                                     return extractAndConvertMethodParam(
-                                             requestMessage.getSession().getSessionAttributes(),
-                                             methodParam,
-                                             MissingSessionAttributeException::new);
-                                 }
-                                 switch (requestMessage.getRequest().getType()) {
-                                     case INTENT:
-                                         IntentRequest intentRequest =
-                                                 (IntentRequest) requestMessage.getRequest();
-                                         if (methodParam.hasParameterAnnotation(SlotValue.class)) {
-                                             return extractAndConvertMethodParam(
-                                                     intentRequest.getIntent().getSlots(),
-                                                     (slots, name) -> Optional.ofNullable(slots)
-                                                                              .map(s -> s.get(name))
-                                                                              .orElse(null),
-                                                     methodParam, MissingSlotException::new);
-                                         }
-                                         break;
-
-                                     case EVENT:
-                                         EventRequest eventRequest =
-                                                 (EventRequest) requestMessage.getRequest();
-                                         if (Payload.class.isAssignableFrom(
-                                                 methodParam.getParameterType())) {
-                                             Payload payload = eventRequest.getEvent().getPayload();
-                                             return convertValue(payload, methodParam);
-                                         }
-                                         break;
-                                 }
-                                 throw new UnsupportedHandlerArgumentException(methodParam);
-                             })
-                             .toArray();
+        SessionHolder sessionHolder = Arrays.stream(args)
+                                            .filter(arg -> arg instanceof SessionHolder)
+                                            .map(SessionHolder.class::cast)
+                                            .findFirst()
+                                            .orElseGet(() -> new SessionHolder(
+                                                    objectMapper, requestMessage.getSession()));
 
         return invokeWithInterceptors(request, requestMessage, sessionHolder, handlerMethod, args);
-    }
-
-    <V> Object extractAndConvertMethodParam(Map<String, V> params, @NonNull MethodParameter methodParam,
-                                            @NonNull ParamNameToMissingExceptionConverter throwerIfMissing) {
-        return extractAndConvertMethodParam(params, Map::get, methodParam, throwerIfMissing);
-    }
-
-    <V> Object extractAndConvertMethodParam(Map<String, V> params, @NonNull ParamAccessor<V> paramAccessor,
-                                            @NonNull MethodParameter methodParam,
-                                            @NonNull ParamNameToMissingExceptionConverter throwerIfMissing) {
-        Map<String, V> camelSupported = supportAlsoCamel(params);
-
-        Annotation annotation = Arrays.stream(methodParam.getParameterAnnotations())
-                                      .filter(a -> a.annotationType()
-                                                    .isAnnotationPresent(CEKRequestParam.class))
-                                      .findFirst()
-                                      .orElse(null);
-
-        String name = Optional.ofNullable(annotation)
-                              .map(a -> (String) AnnotationUtils.getValue(a))
-                              .filter(StringUtils::isNotBlank)
-                              .orElse(methodParam.getParameterName());
-
-        Object paramValue = paramAccessor.access(camelSupported, name);
-
-        if (Optional.class.isAssignableFrom(methodParam.getParameterType())) {
-            if (paramValue == null) {
-                return Optional.empty();
-            }
-            return convertValue(paramValue, methodParam);
-        }
-
-        if (CollectionUtils.isEmpty(params) || paramValue == null) {
-            boolean required = true;
-            if (annotation != null) {
-                required = Optional.ofNullable(AnnotationUtils.getValue(annotation, "required"))
-                                   .map(val -> (boolean) val)
-                                   .orElse(false);
-            }
-            if (required) {
-                throw throwerIfMissing.convert(name);
-            } else {
-                return null;
-            }
-        }
-
-        return convertValue(paramValue, methodParam);
     }
 
     CEKResponseMessage invokeWithInterceptors(HttpServletRequest request, CEKRequestMessage requestMessage,
@@ -355,51 +211,6 @@ public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
         }
 
         return responseMessage;
-    }
-
-    private boolean canConvert(Type allowedType, MethodParameter methodParam) {
-        ResolvableType allowedResolvableType = ResolvableType.forType(allowedType);
-        ResolvableType paramResolvableType = ResolvableType.forMethodParameter(methodParam);
-
-        if (Optional.class.isAssignableFrom(paramResolvableType.resolve())) {
-            return allowedResolvableType.isAssignableFrom(paramResolvableType.getGeneric());
-        }
-
-        return allowedResolvableType.isAssignableFrom(paramResolvableType);
-    }
-
-    private <V> Map<String, V> supportAlsoCamel(Map<String, V> params) {
-        if (params == null || params.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        Map<String, V> newParams = new HashMap<>(params);
-        params.forEach((key, value) -> {
-            CAMEL_CONVERTERS_BY_CONDITION.entrySet().stream()
-                                         .filter(converterWithCondition ->
-                                                         converterWithCondition.getKey().test(key))
-                                         .findFirst()
-                                         .map(converterWithCondition ->
-                                                      converterWithCondition.getValue().apply(key))
-                                         .ifPresent(camelKey -> newParams.put(camelKey, value));
-        });
-        return newParams;
-    }
-
-    private Object convertValue(Object object, MethodParameter methodParam) {
-        Object value = object;
-        try {
-            if (object instanceof Slot) {
-                Slot slot = (Slot) object;
-                value = Optional.ofNullable(slot.convertValueAsType())
-                                .orElseGet(slot::getValue);
-            }
-            return objectMapper.convertValue(value, objectMapper.getTypeFactory().constructType(
-                    methodParam.getGenericParameterType()));
-        } catch (Exception e) {
-            throw new InvalidApplicationParameterException(
-                    "Failed to mapping. "
-                    + "[" + value + " -> " + StringUtils.methodParamToString(methodParam) + "]", e);
-        }
     }
 
     private void validate(List<MethodParameter> methodParams, Object[] args) throws BindException {
@@ -512,18 +323,6 @@ public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
             requestKey.setParamNameAndTypes(Collections.emptySet());
         }
         return requestKey;
-    }
-
-    @FunctionalInterface
-    interface ParamAccessor<V> {
-
-        Object access(Map<String, V> params, String name);
-    }
-
-    @FunctionalInterface
-    interface ParamNameToMissingExceptionConverter {
-
-        MissingRequiredParamException convert(String paramName);
     }
 
 }

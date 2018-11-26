@@ -30,6 +30,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.core.MethodParameter;
@@ -39,6 +40,8 @@ import org.springframework.util.ReflectionUtils;
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestMapping;
 import com.linecorp.clova.extension.boot.handler.annnotation.SlotValue;
 import com.linecorp.clova.extension.boot.handler.condition.CEKHandleConditionMatcher;
+import com.linecorp.clova.extension.boot.handler.resolver.CEKRequestHandlerArgumentResolver;
+import com.linecorp.clova.extension.boot.message.request.CEKRequestMessage;
 import com.linecorp.clova.extension.boot.message.request.RequestType;
 import com.linecorp.clova.extension.boot.util.StringUtils;
 
@@ -70,6 +73,7 @@ public class CEKHandlerMethod implements Comparable<CEKHandlerMethod> {
     private final String name;
 
     private final List<MethodParameter> methodParams;
+    private final List<CEKRequestHandlerArgumentResolver> argumentResolvers;
 
     private final Set<CEKHandleConditionMatcher> handlerConditionMatchers;
     private final Set<CEKHandleConditionMatcher> methodConditionMatchers;
@@ -82,6 +86,7 @@ public class CEKHandlerMethod implements Comparable<CEKHandlerMethod> {
                             Method method,
                             String name,
                             List<MethodParameter> methodParams,
+                            List<CEKRequestHandlerArgumentResolver> argumentResolvers,
                             Set<CEKHandleConditionMatcher> handlerConditionMatchers,
                             Set<CEKHandleConditionMatcher> methodConditionMatchers) {
         this.requestType = requestType;
@@ -89,6 +94,7 @@ public class CEKHandlerMethod implements Comparable<CEKHandlerMethod> {
         this.method = method;
         this.name = name;
         this.methodParams = methodParams;
+        this.argumentResolvers = argumentResolvers;
         this.handlerConditionMatchers = Optional.ofNullable(handlerConditionMatchers).orElseGet(
                 Collections::emptySet);
         this.methodConditionMatchers = Optional.ofNullable(methodConditionMatchers).orElseGet(
@@ -114,6 +120,16 @@ public class CEKHandlerMethod implements Comparable<CEKHandlerMethod> {
         requestKey.setKey(name);
         requestKey.setParamNameAndTypes(paramNameAndTypes());
         return requestKey;
+    }
+
+    public Object[] resolveArguments(CEKRequestMessage requestMessage) {
+        return IntStream.range(0, method.getParameterCount())
+                        .mapToObj(n -> {
+                            MethodParameter methodParam = methodParams.get(n);
+                            CEKRequestHandlerArgumentResolver argumentResolver = argumentResolvers.get(n);
+                            return argumentResolver.resolve(methodParam, requestMessage);
+                        })
+                        .toArray();
     }
 
     public Object invoke(Object[] args) {
