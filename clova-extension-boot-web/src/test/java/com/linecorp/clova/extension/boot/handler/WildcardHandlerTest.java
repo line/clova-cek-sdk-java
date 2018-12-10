@@ -58,6 +58,7 @@ public class WildcardHandlerTest {
 
         @CEKRequestHandler
         @Slf4j
+        @Profile("WildcardHandlerTest")
         static class TestHandler {
 
             @IntentMapping("*")
