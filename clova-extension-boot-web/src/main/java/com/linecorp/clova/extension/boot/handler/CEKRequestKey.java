@@ -17,6 +17,7 @@
 package com.linecorp.clova.extension.boot.handler;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import org.springframework.util.Assert;
 
@@ -47,7 +48,7 @@ public class CEKRequestKey implements Serializable {
             return true;
         }
         Assert.isTrue(StringUtils.isNotBlank(requestName), "requestName should not be blank.");
-        if (this.key.equals("*")) {
+        if (Objects.equals(this.key, "*")) {
             return true;
         }
         return requestName.equals(this.key);

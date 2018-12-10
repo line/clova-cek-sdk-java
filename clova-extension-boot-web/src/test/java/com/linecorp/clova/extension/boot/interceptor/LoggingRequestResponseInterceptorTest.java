@@ -29,10 +29,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
+import com.linecorp.clova.extension.boot.interceptor.LoggingRequestResponseInterceptor.Config;
+
 public class LoggingRequestResponseInterceptorTest {
 
     RestTemplate restTemplate = new RestTemplateBuilder()
-            .interceptors(new LoggingRequestResponseInterceptor())
+            .interceptors(new LoggingRequestResponseInterceptor(Config.builder()
+                                                                      .printResponseBody(false)
+                                                                      .build()))
             .build();
 
     @Test
