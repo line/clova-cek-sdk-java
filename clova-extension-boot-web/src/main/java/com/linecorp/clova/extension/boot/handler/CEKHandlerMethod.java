@@ -108,9 +108,9 @@ public class CEKHandlerMethod implements Comparable<CEKHandlerMethod> {
     }
 
     public CEKRequestKey createKey() {
-        CEKRequestKey requestKey = new CEKRequestKey();
-        requestKey.setKey(name);
-        return requestKey;
+        return CEKRequestKey.builder()
+                            .key(name)
+                            .build();
     }
 
     public Object[] resolveArguments(CEKRequestMessage requestMessage) {

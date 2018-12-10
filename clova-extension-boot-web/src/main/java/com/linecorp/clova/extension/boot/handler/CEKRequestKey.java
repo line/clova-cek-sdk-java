@@ -18,13 +18,39 @@ package com.linecorp.clova.extension.boot.handler;
 
 import java.io.Serializable;
 
+import org.springframework.util.Assert;
+
+import com.linecorp.clova.extension.boot.util.StringUtils;
+
+import lombok.Builder;
 import lombok.Data;
 
+/**
+ * A class that contains a key to handle by request name.
+ */
 @Data
+@Builder
 public class CEKRequestKey implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private String key;
+
+    /**
+     * Returns whether the specified requestName matches the key this instance holds.
+     *
+     * @param requestName CEK Request name.
+     * @return {@code true} if the specified requestName matches the key this instance holds.
+     */
+    public boolean matches(String requestName) {
+        if (StringUtils.isBlank(this.key) && StringUtils.isBlank(requestName)) {
+            return true;
+        }
+        Assert.isTrue(StringUtils.isNotBlank(requestName), "requestName should not be blank.");
+        if (this.key.equals("*")) {
+            return true;
+        }
+        return requestName.equals(this.key);
+    }
 
 }
