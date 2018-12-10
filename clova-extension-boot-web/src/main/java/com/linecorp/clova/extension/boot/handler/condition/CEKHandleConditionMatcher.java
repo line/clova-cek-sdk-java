@@ -25,7 +25,7 @@ import com.linecorp.clova.extension.boot.message.request.CEKRequestMessage;
  * An interface for determining if there is a match with the Handler's execution conditions.
  * <p>
  * If you would like to add execution conditions to the Handler, define a class that has implemented the interface and
- * register to {@link com.linecorp.clova.extension.boot.handler.CEKHandlerMethod#conditionMatchers}.
+ * register to {@link com.linecorp.clova.extension.boot.handler.CEKHandlerMethod}.
  * The annotation that indicates the execution conditions added to the Handler will add
  * the {@link com.linecorp.clova.extension.boot.handler.annnotation} package.
  */
@@ -33,7 +33,6 @@ public interface CEKHandleConditionMatcher {
 
     /**
      * Return true when the Handler should process the request.
-     * <p>
      *
      * @param request        {@link HttpServletRequest}
      * @param requestMessage {@link CEKRequestMessage}

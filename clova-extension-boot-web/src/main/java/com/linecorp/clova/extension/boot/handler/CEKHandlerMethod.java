@@ -21,14 +21,19 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.core.MethodParameter;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestMapping;
@@ -41,11 +46,23 @@ import lombok.Builder;
 import lombok.Data;
 
 /**
- * A class to store the Handler information extracted from the {@link CEKRequestMapping @CEKRequestMapping} annotation.
+ * A class to store the Handler information extracted from the {@link CEKRequestMapping @CEKRequestMapping}
+ * annotation.
+ * <p>
+ * This class is able to be sorted by the execution priority. The priority order is decided by the handler class
+ * first, and then is decided by the handler methods. The priority is determined as follows.
+ * <ol>
+ * <li>More {@link #handlerConditionMatchers} size</li>
+ * <li>More {@link #methodConditionMatchers} size</li>
+ * </ol>
+ * If multiple identical priority methods are found, {@link com.linecorp.clova.extension.boot.exception.TooManyMatchedRequestHandlersException
+ * TooManyMatchedRequestHandlersException} is thrown by {@link CEKRequestHandlerDispatcher}
+ *
+ * @see CEKRequestHandlerDispatcher#extractHandlerMethod(javax.servlet.http.HttpServletRequest,
+ * com.linecorp.clova.extension.boot.message.request.CEKRequestMessage, com.linecorp.clova.extension.boot.message.context.SystemContext)
  */
 @Data
-@Builder
-public class CEKHandlerMethod {
+public class CEKHandlerMethod implements Comparable<CEKHandlerMethod> {
     private final RequestType requestType;
 
     private final Object bean;
@@ -54,7 +71,43 @@ public class CEKHandlerMethod {
 
     private final List<MethodParameter> methodParams;
 
-    private final Set<CEKHandleConditionMatcher> conditionMatchers;
+    private final Set<CEKHandleConditionMatcher> handlerConditionMatchers;
+    private final Set<CEKHandleConditionMatcher> methodConditionMatchers;
+
+    private final CEKHandleConditionMatcher compositeMatcher;
+
+    @Builder
+    public CEKHandlerMethod(RequestType requestType,
+                            Object bean,
+                            Method method,
+                            String name,
+                            List<MethodParameter> methodParams,
+                            Set<CEKHandleConditionMatcher> handlerConditionMatchers,
+                            Set<CEKHandleConditionMatcher> methodConditionMatchers) {
+        this.requestType = requestType;
+        this.bean = bean;
+        this.method = method;
+        this.name = name;
+        this.methodParams = methodParams;
+        this.handlerConditionMatchers = Optional.ofNullable(handlerConditionMatchers).orElseGet(
+                Collections::emptySet);
+        this.methodConditionMatchers = Optional.ofNullable(methodConditionMatchers).orElseGet(
+                Collections::emptySet);
+
+        this.compositeMatcher = (request, requestMessage, system) -> {
+            if (!this.handlerConditionMatchers.isEmpty()
+                && !this.handlerConditionMatchers.stream().allMatch(
+                    matcher -> matcher.match(request, requestMessage, system))) {
+                return false;
+            }
+            if (!this.methodConditionMatchers.isEmpty()
+                && !this.methodConditionMatchers.stream().allMatch(
+                    matcher -> matcher.match(request, requestMessage, system))) {
+                return false;
+            }
+            return true;
+        };
+    }
 
     public CEKRequestKey createKey() {
         CEKRequestKey requestKey = new CEKRequestKey();
@@ -101,19 +154,50 @@ public class CEKHandlerMethod {
     }
 
     @Override
+    public int compareTo(CEKHandlerMethod other) {
+        int handlerConditionMatcherCompareResult =
+                this.getHandlerConditionMatcherClassCount() - other.getHandlerConditionMatcherClassCount();
+        if (handlerConditionMatcherCompareResult != 0) {
+            // Handler class with more condition types has a higher priority.
+            return -1 * handlerConditionMatcherCompareResult;
+        }
+        int methodConditionMatcherCompareResult =
+                this.getMethodConditionMatcherClassCount() - other.getMethodConditionMatcherClassCount();
+        if (methodConditionMatcherCompareResult != 0) {
+            // Handler method with more condition types has a higher priority.
+            return -1 * methodConditionMatcherCompareResult;
+        }
+        return 0;
+    }
+
+    @Override
     public String toString() {
-        if (this.conditionMatchers == null || this.conditionMatchers.isEmpty()) {
+        String conditionMatchersString = conditionMatchersToString();
+        if (conditionMatchersString.isEmpty()) {
             return String.format("%s:\"%s\" %s#%s(%s)",
                                  this.requestType.name().toLowerCase(),
                                  this.name,
                                  method.getDeclaringClass().getSimpleName(),
                                  method.getName(), methodParamsToString());
+        } else {
+            return String.format("%s:\"%s\" %s#%s(%s) conditions:[%s]",
+                                 this.requestType.name().toLowerCase(),
+                                 this.name,
+                                 method.getDeclaringClass().getSimpleName(),
+                                 method.getName(), methodParamsToString(),
+                                 conditionMatchersString);
         }
-        return String.format("%s:\"%s\" %s#%s(%s) conditions:%s",
-                             this.requestType.name().toLowerCase(),
-                             this.name,
-                             method.getDeclaringClass().getSimpleName(),
-                             method.getName(), methodParamsToString(), this.conditionMatchers.toString());
+    }
+
+    private String conditionMatchersToString() {
+        List<String> strings = new ArrayList<>();
+        if (!this.handlerConditionMatchers.isEmpty()) {
+            strings.add("handler:" + String.valueOf(this.handlerConditionMatchers));
+        }
+        if (!this.methodConditionMatchers.isEmpty()) {
+            strings.add("method:" + String.valueOf(this.methodConditionMatchers));
+        }
+        return strings.stream().collect(Collectors.joining(" "));
     }
 
     private String methodParamsToString() {
@@ -122,4 +206,25 @@ public class CEKHandlerMethod {
                                                + methodParam.getParameterName())
                            .collect(Collectors.joining(", "));
     }
+
+    private int getHandlerConditionMatcherClassCount() {
+        return getConditionMatcherClassCount(this.handlerConditionMatchers);
+    }
+
+    private int getMethodConditionMatcherClassCount() {
+        return getConditionMatcherClassCount(this.methodConditionMatchers);
+    }
+
+    private static int getConditionMatcherClassCount(Collection<CEKHandleConditionMatcher> matchers) {
+        return (int) matchers.stream()
+                             .map(CEKHandlerMethod::getConditionMatcherClassName)
+                             .distinct()
+                             .count();
+    }
+
+    private static String getConditionMatcherClassName(CEKHandleConditionMatcher matcher) {
+        Class<?> matcherType = ClassUtils.getUserClass(AopProxyUtils.ultimateTargetClass(matcher));
+        return matcherType.getName();
+    }
+
 }

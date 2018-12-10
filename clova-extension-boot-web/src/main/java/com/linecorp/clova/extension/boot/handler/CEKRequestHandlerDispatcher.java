@@ -111,9 +111,8 @@ public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
     /**
      * Parses the CEK request, extracts the appropriate HandlerMethod, and executes it.
      *
-     * @param request {@link HttpServletRequest}
+     * @param request        {@link HttpServletRequest}
      * @param requestMessage {@link CEKRequestMessage}
-     *
      * @return {@link CEKResponseMessage}
      */
     @Override
@@ -463,18 +462,10 @@ public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
                                    .getOrDefault(createKey(requestMessage.getRequest()),
                                                  Collections.emptyList())
                                    .stream()
-                                   .filter(handlerMethod -> {
-                                       if (handlerMethod.getConditionMatchers().isEmpty()) {
-                                           // Include no condition handler method always.
-                                           return true;
-                                       }
-                                       return handlerMethod
-                                               .getConditionMatchers().stream()
-                                               .anyMatch(conditionMatcher ->
-                                                                 conditionMatcher.match(request,
-                                                                                        requestMessage,
-                                                                                        system));
-                                   })
+                                   .filter(handlerMethod ->
+                                                   handlerMethod.getCompositeMatcher()
+                                                                .match(request, requestMessage, system))
+                                   .sorted()
                                    .collect(Collectors.toList());
 
         // Not found handler method
@@ -483,28 +474,21 @@ public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
                     getRequestType(requestMessage.getRequest()),
                     requestMessage.getRequest().getName());
         }
-        // No condition method & condition matched method
-        if (handlerMethods.size() == 2) {
-            boolean hasCondition1 = !handlerMethods.get(0).getConditionMatchers().isEmpty();
-            boolean hasCondition2 = !handlerMethods.get(1).getConditionMatchers().isEmpty();
-            if (hasCondition1 && !hasCondition2) {
-                return handlerMethods.get(0);
-            }
-            if (!hasCondition1 && hasCondition2) {
-                return handlerMethods.get(1);
-            }
-            // If both of the two have condition or don't have any conditions,
-            // TooManyMatchedRequestHandlersException is thrown in next block.
+        // Found only one method
+        if (handlerMethods.size() == 1) {
+            return handlerMethods.get(0);
         }
-        if (handlerMethods.size() > 1) {
-            throw new TooManyMatchedRequestHandlersException(
-                    requestMessage.getRequest().getType(),
-                    requestMessage.getRequest().getName(),
-                    handlerMethods);
+        // Found more than two methods
+        CEKHandlerMethod firstMethod = handlerMethods.get(0);
+        CEKHandlerMethod secondMethod = handlerMethods.get(1);
+        if (firstMethod.compareTo(secondMethod) != 0) {
+            return firstMethod;
         }
-
-        // No condition handler method.
-        return handlerMethods.get(0);
+        // Cannot select method to call.
+        throw new TooManyMatchedRequestHandlersException(
+                requestMessage.getRequest().getType(),
+                requestMessage.getRequest().getName(),
+                handlerMethods);
     }
 
     private static CEKRequestKey createKey(CEKRequest request) {
