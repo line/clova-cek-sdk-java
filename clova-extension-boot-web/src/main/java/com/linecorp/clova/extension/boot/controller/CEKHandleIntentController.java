@@ -20,6 +20,8 @@ import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -44,6 +46,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CEKHandleIntentController {
 
+    private static final Logger CEK_REQUEST_MESSAGE_LOGGER =
+            LoggerFactory.getLogger("cek.message.request");
+
     private final CEKRequestProcessor requestProcessor;
     private final ObjectMapper objectMapper;
 
@@ -61,7 +66,9 @@ public class CEKHandleIntentController {
     @PostMapping("${cek.api-path:/}")
     public CEKResponseMessage handle(HttpServletRequest request, @RequestBody String requestBody)
             throws Throwable {
-        if (log.isDebugEnabled()) {
+        if (CEK_REQUEST_MESSAGE_LOGGER.isDebugEnabled()) {
+            CEK_REQUEST_MESSAGE_LOGGER.debug("CEK Payload --> {}", requestBody);
+        } else if (log.isDebugEnabled()) {
             log.debug("CEK Payload --> {}", requestBody);
         }
         RequestUtils.setRequestBodyJson(request, requestBody);
