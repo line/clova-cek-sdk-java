@@ -44,8 +44,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.jayway.jsonpath.Configuration;
-
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestHandler;
 import com.linecorp.clova.extension.boot.handler.annnotation.ContextValue;
 import com.linecorp.clova.extension.boot.handler.annnotation.IntentMapping;
@@ -117,10 +115,6 @@ public class OptionalArgumentHandlerTest {
     @SpyBean
     TestConfig.TestHandler handler;
 
-    @Autowired
-    @SuppressWarnings("SpringJavaAutowiringInspection")
-    Configuration configuration;
-
     @Before
     public void setUp() {
         reset(handler);
@@ -131,7 +125,7 @@ public class OptionalArgumentHandlerTest {
         TestContext context = new TestContext();
         context.setValue(UUID.randomUUID().toString());
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleContext")
                                          .put("$.context.TestContext", context)
                                          .build();
@@ -147,7 +141,7 @@ public class OptionalArgumentHandlerTest {
 
     @Test
     public void handleContext_noContext() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleContext")
                                          .build();
 
@@ -165,7 +159,7 @@ public class OptionalArgumentHandlerTest {
         TestContext context = new TestContext();
         context.setValue(UUID.randomUUID().toString());
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleNonRequiredContext")
                                          .put("$.context.TestContext", context)
                                          .build();
@@ -181,7 +175,7 @@ public class OptionalArgumentHandlerTest {
 
     @Test
     public void handleNonRequiredContext_noContext() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleNonRequiredContext")
                                          .build();
 
@@ -199,7 +193,7 @@ public class OptionalArgumentHandlerTest {
         TestContext context = new TestContext();
         context.setValue(UUID.randomUUID().toString());
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleNonRequiredContextWithValidation")
                                          .put("$.context.TestContext", context)
                                          .build();
@@ -217,7 +211,7 @@ public class OptionalArgumentHandlerTest {
     public void handleNonRequiredContextWithValidation_hasContext_validationNG() throws Exception {
         TestContext context = new TestContext();
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleNonRequiredContextWithValidation")
                                          .put("$.context.TestContext", context)
                                          .build();
@@ -233,7 +227,7 @@ public class OptionalArgumentHandlerTest {
 
     @Test
     public void handleNonRequiredContextWithValidation_noContext() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleNonRequiredContextWithValidation")
                                          .build();
 
@@ -251,7 +245,7 @@ public class OptionalArgumentHandlerTest {
         TestContext context = new TestContext();
         context.setValue(UUID.randomUUID().toString());
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleOptionalContext")
                                          .put("$.context.TestContext", context)
                                          .build();
@@ -270,7 +264,7 @@ public class OptionalArgumentHandlerTest {
         TestContext context = new TestContext();
         context.setValue("");
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleOptionalContext")
                                          .put("$.context.TestContext", context)
                                          .build();
@@ -286,7 +280,7 @@ public class OptionalArgumentHandlerTest {
 
     @Test
     public void handleOptionalContext_noContext() throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleOptionalContext")
                                          .build();
 
@@ -304,7 +298,7 @@ public class OptionalArgumentHandlerTest {
         TestContext context = new TestContext();
         context.setValue(UUID.randomUUID().toString());
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleOptionalContextWithValidation")
                                          .put("$.context.TestContext", context)
                                          .build();
@@ -323,7 +317,7 @@ public class OptionalArgumentHandlerTest {
         TestContext context = new TestContext();
         context.setValue("");
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleOptionalContextWithValidation")
                                          .put("$.context.TestContext", context)
                                          .build();
@@ -340,7 +334,7 @@ public class OptionalArgumentHandlerTest {
     @Test
     public void handleOptionalContextWithValidation_noContext() throws Exception {
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleOptionalContextWithValidation")
                                          .build();
 
@@ -358,7 +352,7 @@ public class OptionalArgumentHandlerTest {
         TestContext context = new TestContext();
         context.setValue(UUID.randomUUID().toString());
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleNonRequiredOptionalContext")
                                          .put("$.context.TestContext", context)
                                          .build();
@@ -375,7 +369,7 @@ public class OptionalArgumentHandlerTest {
     @Test
     public void handleNonRequiredOptionalContext_noContext() throws Exception {
 
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent("HandleNonRequiredOptionalContext")
                                          .build();
 

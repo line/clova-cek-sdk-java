@@ -38,7 +38,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.Configuration;
 
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestHandler;
 import com.linecorp.clova.extension.boot.handler.annnotation.IntentMapping;
@@ -75,16 +74,12 @@ public class CEKSDKInformationBinderResponseBodyAdviceTest {
     @Autowired
     ObjectMapper objectMapper;
 
-    @Autowired
-    @SuppressWarnings("SpringJavaAutowiringInspection")
-    Configuration configuration;
-
     @Test
     public void testCorrectResponse() throws Exception {
         String query = RandomStringUtils.randomAlphabetic(10);
 
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("SampleIntent")
                                                         .slot("query", query)
                                                         .build())
@@ -102,7 +97,7 @@ public class CEKSDKInformationBinderResponseBodyAdviceTest {
     @Test
     public void testErrorResponse() throws Exception {
         mvc.perform(post("/cek/v1")
-                            .content(CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+                            .content(CEKRequestGenerator.requestBodyBuilder()
                                                         .intent("SampleIntent")
                                                         .build())
                             .contentType(MediaType.APPLICATION_JSON))

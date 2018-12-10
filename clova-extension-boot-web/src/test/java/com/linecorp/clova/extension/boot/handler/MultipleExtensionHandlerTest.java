@@ -44,8 +44,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
-import com.jayway.jsonpath.Configuration;
-
 import com.linecorp.clova.extension.boot.controller.advice.CEKHandleIntentControllerAdvice;
 import com.linecorp.clova.extension.boot.exception.RequestHandlerNotFoundException;
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestHandler;
@@ -110,8 +108,6 @@ public class MultipleExtensionHandlerTest {
 
     @Autowired
     MockMvc mvc;
-    @Autowired
-    Configuration configuration;
 
     @SpyBean
     TestConfig.FooExtensionHandler fooHandler;
@@ -200,7 +196,7 @@ public class MultipleExtensionHandlerTest {
     }
 
     private ResultActions callHandlerBy(String intent, String extensionId) throws Exception {
-        String body = CEKRequestGenerator.requestBodyBuilder("data/request.json", configuration)
+        String body = CEKRequestGenerator.requestBodyBuilder()
                                          .intent(intent)
                                          .put("$.context.System.application.applicationId", extensionId)
                                          .build();

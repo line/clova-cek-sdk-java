@@ -35,8 +35,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.jayway.jsonpath.Configuration;
-
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestHandler;
 import com.linecorp.clova.extension.boot.handler.annnotation.IntentMapping;
 import com.linecorp.clova.extension.boot.message.response.CEKResponse;
@@ -71,13 +69,10 @@ public class CEKRequestExtensionIdVerifierNoApplicationIdTest {
     @SpyBean
     TestConfig.TestHandler handler;
 
-    @Autowired
-    Configuration configuration;
-
     @Test
     public void test_noApplicationId() throws Throwable {
         String content = CEKRequestGenerator
-                .requestBodyBuilder("data/request.json", configuration)
+                .requestBodyBuilder()
                 .intent("CEKRequestExtensionIdVerifierNoApplicationIdTest")
                 .remove("$.context.System.application.applicationId")
                 .build();
@@ -96,7 +91,7 @@ public class CEKRequestExtensionIdVerifierNoApplicationIdTest {
         String applicationId = UUID.randomUUID().toString();
 
         final String content = CEKRequestGenerator
-                .requestBodyBuilder("data/request.json", configuration)
+                .requestBodyBuilder()
                 .intent("CEKRequestExtensionIdVerifierNoApplicationIdTest")
                 .placeholder("applicationId", applicationId)
                 .build();

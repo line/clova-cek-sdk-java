@@ -1,0 +1,17 @@
+{
+  "offsetInMilliseconds": 300000,
+  "playerActivity": "PLAYING",
+  "stream": {
+    "beginAtInMilliseconds": null,
+    "durationInMilliseconds": null,
+    "progressReport": {
+      "progressReportDelayInMilliseconds": null,
+      "progressReportIntervalInMilliseconds": null,
+      "progressReportPositionInMilliseconds": 60000
+    },
+    "token": "test token",
+    "url": "clova:test-url",
+    "urlPlayable": false
+  },
+  "totalInMilliseconds": 0
+}
