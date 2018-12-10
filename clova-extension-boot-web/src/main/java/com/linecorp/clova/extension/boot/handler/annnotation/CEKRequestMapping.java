@@ -46,7 +46,9 @@ public @interface CEKRequestMapping {
     /**
      * The request name to handle.
      * <p>
-     * This value is matched with {@link CEKRequest#getName()}.
+     * This value is matched with {@link CEKRequest#getName()}. If this value is {@code "*"}, all request typed
+     * by {@link #type()} are handled. Both wildcard handler and non-wildcard handler can not be defined
+     * together. However, if they are of different {@link #type() types}, that is not the case.
      */
     String value() default "";
 

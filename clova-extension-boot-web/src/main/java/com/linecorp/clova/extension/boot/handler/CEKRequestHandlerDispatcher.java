@@ -16,6 +16,7 @@
 
 package com.linecorp.clova.extension.boot.handler;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -52,6 +54,7 @@ import com.linecorp.clova.extension.boot.session.SessionHolder;
 import com.linecorp.clova.extension.boot.util.RequestUtils;
 import com.linecorp.clova.extension.boot.verifier.CEKRequestVerifier;
 
+import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -72,6 +75,9 @@ public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
     private List<CEKRequestVerifier> requestVerifiers = Collections.emptyList();
     @Setter
     private Map<String, CEKHandlerInterceptor> handlerInterceptorMap = Collections.emptyMap();
+
+    private static final Map<CEKHandlerMethodCandidatesKey, List<CEKHandlerMethod>> HANDLER_METHOD_CANDIDATES =
+            new ConcurrentHashMap<>();
 
     /**
      * Parses the CEK request, extracts the appropriate HandlerMethod, and executes it.
@@ -265,18 +271,13 @@ public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
 
     private CEKHandlerMethod extractHandlerMethod(HttpServletRequest request, CEKRequestMessage requestMessage,
                                                   SystemContext system) {
-        List<CEKHandlerMethod> handlerMethods =
-                this.handlerMapping.getHandlerMethodMap()
-                                   .getOrDefault(requestMessage.getRequest().getType(),
-                                                 Collections.emptyMap())
-                                   .getOrDefault(createKey(requestMessage.getRequest()),
-                                                 Collections.emptyList())
-                                   .stream()
-                                   .filter(handlerMethod ->
-                                                   handlerMethod.getCompositeMatcher()
-                                                                .match(request, requestMessage, system))
-                                   .sorted()
-                                   .collect(Collectors.toList());
+        List<CEKHandlerMethod> handlerMethods = extractHandlerMethodCandidates(requestMessage.getRequest())
+                .stream()
+                .filter(handlerMethod -> handlerMethod.getCompositeMatcher()
+                                                      .match(request, requestMessage, system))
+                // Sort by priority
+                .sorted()
+                .collect(Collectors.toList());
 
         // Not found handler method
         if (handlerMethods.isEmpty()) {
@@ -301,10 +302,33 @@ public class CEKRequestHandlerDispatcher implements CEKRequestProcessor {
                 handlerMethods);
     }
 
-    private static CEKRequestKey createKey(CEKRequest request) {
-        CEKRequestKey requestKey = new CEKRequestKey();
-        requestKey.setKey(request.getName());
-        return requestKey;
+    private List<CEKHandlerMethod> extractHandlerMethodCandidates(CEKRequest request) {
+        return HANDLER_METHOD_CANDIDATES.computeIfAbsent(
+                new CEKHandlerMethodCandidatesKey(request),
+                candidatesKey -> this.handlerMapping.getHandlerMethodMap()
+                                                    .getOrDefault(candidatesKey.getRequestType(),
+                                                                  Collections.emptyMap())
+                                                    .entrySet()
+                                                    .stream()
+                                                    .filter(entry -> entry.getKey().matches(
+                                                            candidatesKey.getRequestName()))
+                                                    .flatMap(entry -> entry.getValue().stream())
+                                                    .collect(Collectors.toList()));
+    }
+
+    @Data
+    private static class CEKHandlerMethodCandidatesKey implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        private final RequestType requestType;
+        private final String requestName;
+
+        CEKHandlerMethodCandidatesKey(CEKRequest request) {
+            this.requestType = request.getType();
+            this.requestName = request.getName();
+        }
+
     }
 
 }
