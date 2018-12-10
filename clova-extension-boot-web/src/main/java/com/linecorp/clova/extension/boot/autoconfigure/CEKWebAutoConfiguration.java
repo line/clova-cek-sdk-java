@@ -16,14 +16,12 @@
 
 package com.linecorp.clova.extension.boot.autoconfigure;
 
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -32,11 +30,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.annotation.Order;
-import org.springframework.util.ClassUtils;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.validation.SmartValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -133,27 +127,16 @@ public class CEKWebAutoConfiguration {
         return new OutputSpeechGenerator(messageSource);
     }
 
+    @SuppressWarnings("unchecked")
     Map<String, CEKHandlerInterceptor> sortByOrder(Map<String, CEKHandlerInterceptor> handlerInterceptorMap) {
         return handlerInterceptorMap.entrySet().stream()
-                                    .sorted(Comparator.comparing(entry -> getOrder(entry.getValue())))
+                                    .sorted(AnnotationAwareOrderComparator.INSTANCE.withSourceProvider(
+                                            entry -> ((Map.Entry<String, CEKHandlerInterceptor>) entry)
+                                                    .getValue()))
                                     .collect(Collectors.toMap(Map.Entry::getKey,
                                                               Map.Entry::getValue,
                                                               (v1, v2) -> v1,
                                                               LinkedHashMap::new));
-    }
-
-    private static int getOrder(Object obj) {
-        if (obj == null) {
-            return Ordered.LOWEST_PRECEDENCE;
-        }
-        Class<?> beanType = ClassUtils.getUserClass(AopProxyUtils.ultimateTargetClass(obj));
-        if (Ordered.class.isAssignableFrom(beanType)) {
-            return ((Ordered) obj).getOrder();
-        }
-
-        return (int) Optional.ofNullable(AnnotatedElementUtils.getMergedAnnotation(beanType, Order.class))
-                             .map(AnnotationUtils::getValue)
-                             .orElse(Ordered.LOWEST_PRECEDENCE);
     }
 
     @Configuration
