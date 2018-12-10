@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,14 +39,14 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
-import com.linecorp.clova.extension.boot.message.request.IntentRequest.Intent.Slot.SlotValueType;
 import com.linecorp.clova.extension.boot.message.request.RequestType;
+import com.linecorp.clova.extension.boot.message.request.SlotValueInterval;
+import com.linecorp.clova.extension.boot.message.request.SlotValueType;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 /**
  * CEK request generator for tests.
@@ -166,7 +165,8 @@ public class CEKRequestGenerator {
         }
 
         /**
-         * Sets {@link RequestType#EVENT EVENT} to request type, and sets the specified to event namespace and name.
+         * Sets {@link RequestType#EVENT EVENT} to request type, and sets the specified to event namespace and
+         * name.
          *
          * @param event event namespace and name joined by dot. e.g.) Demo.Start
          * @return this instance
@@ -192,18 +192,9 @@ public class CEKRequestGenerator {
             return this;
         }
 
-        public RequestBodyBuilder slotWithType(String name, TemporalAccessor value) {
-            SlotValueType valueType = Arrays.stream(SlotValueType.values())
-                                            .filter(type -> type.getSlotValueType() != null)
-                                            .filter(type -> type.getSlotValueType()
-                                                                .isAssignableFrom(value.getClass()))
-                                            .findFirst()
-                                            .orElseThrow(() -> new IllegalArgumentException(
-                                                    String.format("Unsupported type. [%s]",
-                                                                  String.valueOf(value))));
-            Slot slot = new Slot(name, DateTimeFormatter.ofPattern(valueType.getFormat()).format(value),
-                                 valueType.getValue());
-            this.additionalObjects.put("$.request.intent.slots." + name, slot);
+        public RequestBodyBuilder slot(String name, Object value, SlotValueType valueType) {
+            this.additionalObjects.put("$.request.intent.slots." + name,
+                                       new Slot(name, value, valueType.getName()));
             return this;
         }
 
@@ -337,12 +328,40 @@ public class CEKRequestGenerator {
     }
 
     @Data
-    @RequiredArgsConstructor
     @AllArgsConstructor
     private static class Slot {
-        final String name;
-        final Object value;
-        String valueType;
+
+        private String name;
+        private Object value;
+        private String valueType;
+
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        Slot(String name, Object value) {
+            this.name = name;
+            this.value = value;
+            if (value != null) {
+                Arrays.stream(SlotValueType.values())
+                      .filter(valueType -> {
+                          if (valueType.getValueType().isAssignableFrom(value.getClass())) {
+                              if (value instanceof SlotValueInterval) {
+                                  Class<?> genericType = ((SlotValueInterval) value).getStart().getClass();
+                                  return valueType.getGenericType().isAssignableFrom(genericType);
+                              }
+                              return true;
+                          }
+                          return false;
+                      })
+                      .findFirst()
+                      .ifPresent(valueType -> {
+                          if (this.value instanceof TemporalAccessor) {
+                              this.value = valueType.format((TemporalAccessor) this.value);
+                          } else if (this.value instanceof SlotValueInterval) {
+                              this.value = valueType.format((SlotValueInterval) this.value);
+                          }
+                          this.valueType = valueType.getName();
+                      });
+            }
+        }
     }
 
 }

@@ -60,11 +60,13 @@ import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestHandler;
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestMapping;
 import com.linecorp.clova.extension.boot.handler.condition.CEKHandleConditionMatcher;
 import com.linecorp.clova.extension.boot.handler.condition.CEKHandleConditionMatcherFactory;
+import com.linecorp.clova.extension.boot.handler.resolver.CEKRequestHandlerArgumentResolver;
 import com.linecorp.clova.extension.boot.message.request.RequestType;
 import com.linecorp.clova.extension.boot.message.response.CEKResponse;
 import com.linecorp.clova.extension.boot.util.StringUtils;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,10 +74,13 @@ import lombok.extern.slf4j.Slf4j;
  * A class that holds each {@link RequestType}'s mapping of the Handler method.
  */
 @Slf4j
+@RequiredArgsConstructor
 public class CEKRequestMappingHandlerMapping implements BeanFactoryAware, InitializingBean {
 
     private static final ParameterNameDiscoverer PARAMETER_NAME_DISCOVERER =
             new DefaultParameterNameDiscoverer();
+
+    private final List<CEKRequestHandlerArgumentResolver> argumentResolvers;
 
     @Setter
     private BeanFactory beanFactory;
@@ -137,6 +142,11 @@ public class CEKRequestMappingHandlerMapping implements BeanFactoryAware, Initia
                                      PARAMETER_NAME_DISCOVERER))
                              .collect(toList());
 
+            List<CEKRequestHandlerArgumentResolver> argumentResolvers =
+                    methodParams.stream()
+                                .map(this::extractArgumentResolver)
+                                .collect(Collectors.toList());
+
             method.setAccessible(true);
 
             Set<CEKHandleConditionMatcher> methodConditionMatchers = conditionMatchers(method);
@@ -147,6 +157,7 @@ public class CEKRequestMappingHandlerMapping implements BeanFactoryAware, Initia
                                                              .method(method)
                                                              .name(name)
                                                              .methodParams(methodParams)
+                                                             .argumentResolvers(argumentResolvers)
                                                              .handlerConditionMatchers(handlerConditionMatchers)
                                                              .methodConditionMatchers(methodConditionMatchers)
                                                              .build();
@@ -157,6 +168,14 @@ public class CEKRequestMappingHandlerMapping implements BeanFactoryAware, Initia
         });
 
         return handlerMethods;
+    }
+
+    private CEKRequestHandlerArgumentResolver extractArgumentResolver(MethodParameter methodParam) {
+        return this.argumentResolvers.stream()
+                                     .filter(argumentResolver -> argumentResolver.supports(methodParam))
+                                     .findFirst()
+                                     .orElseThrow(
+                                             () -> new UnsupportedHandlerArgumentException(methodParam));
     }
 
     private Class<?> getOriginalBeanType(Object bean) {

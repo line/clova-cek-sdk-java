@@ -17,19 +17,14 @@
 package com.linecorp.clova.extension.boot.handler;
 
 import java.lang.reflect.Method;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.core.MethodParameter;
@@ -37,10 +32,10 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
 import com.linecorp.clova.extension.boot.handler.annnotation.CEKRequestMapping;
-import com.linecorp.clova.extension.boot.handler.annnotation.SlotValue;
 import com.linecorp.clova.extension.boot.handler.condition.CEKHandleConditionMatcher;
+import com.linecorp.clova.extension.boot.handler.resolver.CEKRequestHandlerArgumentResolver;
+import com.linecorp.clova.extension.boot.message.request.CEKRequestMessage;
 import com.linecorp.clova.extension.boot.message.request.RequestType;
-import com.linecorp.clova.extension.boot.util.StringUtils;
 
 import lombok.Builder;
 import lombok.Data;
@@ -70,6 +65,7 @@ public class CEKHandlerMethod implements Comparable<CEKHandlerMethod> {
     private final String name;
 
     private final List<MethodParameter> methodParams;
+    private final List<CEKRequestHandlerArgumentResolver> argumentResolvers;
 
     private final Set<CEKHandleConditionMatcher> handlerConditionMatchers;
     private final Set<CEKHandleConditionMatcher> methodConditionMatchers;
@@ -82,6 +78,7 @@ public class CEKHandlerMethod implements Comparable<CEKHandlerMethod> {
                             Method method,
                             String name,
                             List<MethodParameter> methodParams,
+                            List<CEKRequestHandlerArgumentResolver> argumentResolvers,
                             Set<CEKHandleConditionMatcher> handlerConditionMatchers,
                             Set<CEKHandleConditionMatcher> methodConditionMatchers) {
         this.requestType = requestType;
@@ -89,6 +86,7 @@ public class CEKHandlerMethod implements Comparable<CEKHandlerMethod> {
         this.method = method;
         this.name = name;
         this.methodParams = methodParams;
+        this.argumentResolvers = argumentResolvers;
         this.handlerConditionMatchers = Optional.ofNullable(handlerConditionMatchers).orElseGet(
                 Collections::emptySet);
         this.methodConditionMatchers = Optional.ofNullable(methodConditionMatchers).orElseGet(
@@ -112,45 +110,21 @@ public class CEKHandlerMethod implements Comparable<CEKHandlerMethod> {
     public CEKRequestKey createKey() {
         CEKRequestKey requestKey = new CEKRequestKey();
         requestKey.setKey(name);
-        requestKey.setParamNameAndTypes(paramNameAndTypes());
         return requestKey;
+    }
+
+    public Object[] resolveArguments(CEKRequestMessage requestMessage) {
+        return IntStream.range(0, method.getParameterCount())
+                        .mapToObj(n -> {
+                            MethodParameter methodParam = methodParams.get(n);
+                            CEKRequestHandlerArgumentResolver argumentResolver = argumentResolvers.get(n);
+                            return argumentResolver.resolve(methodParam, requestMessage);
+                        })
+                        .toArray();
     }
 
     public Object invoke(Object[] args) {
         return ReflectionUtils.invokeMethod(method, bean, args);
-    }
-
-    private Set<String> paramNameAndTypes() {
-        return methodParams.stream()
-                           .map(methodParam -> {
-                               if (containsType(methodParam, OffsetDateTime.class, ZonedDateTime.class)) {
-                                   return getSlotValueName(methodParam) + "@datetime";
-                               }
-                               if (containsType(methodParam, LocalDate.class)) {
-                                   return getSlotValueName(methodParam) + "@date";
-                               }
-                               if (containsType(methodParam, LocalTime.class)) {
-                                   return getSlotValueName(methodParam) + "@time";
-                               }
-                               return null;
-                           })
-                           .filter(Objects::nonNull)
-                           .collect(Collectors.toSet());
-    }
-
-    private boolean containsType(MethodParameter methodParam, Class<?>... types) {
-        if (types == null || types.length == 0) {
-            return false;
-        }
-        return Arrays.stream(types)
-                     .anyMatch(type -> type == methodParam.getParameterType());
-    }
-
-    private String getSlotValueName(MethodParameter methodParameter) {
-        return Optional.ofNullable(methodParameter.getParameterAnnotation(SlotValue.class))
-                       .map(SlotValue::value)
-                       .filter(StringUtils::isNotBlank)
-                       .orElseGet(methodParameter::getParameterName);
     }
 
     @Override

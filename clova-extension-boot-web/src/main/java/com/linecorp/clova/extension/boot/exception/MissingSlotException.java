@@ -18,17 +18,14 @@ package com.linecorp.clova.extension.boot.exception;
 
 import static com.linecorp.clova.extension.boot.util.InformationLevel.ERROR;
 
-import com.linecorp.clova.extension.boot.message.request.IntentRequest;
+import com.linecorp.clova.extension.boot.message.request.Slot;
 import com.linecorp.clova.extension.boot.util.LogLevel;
 
 /**
- * An exception for missing a {@link IntentRequest.Intent.Slot slot}.
+ * An exception for missing a {@link Slot slot}.
  * <p>
- * This exception occurred when expected {@link IntentRequest.Intent.Slot slot} is missing.
- * Handler methods may access {@link IntentRequest.Intent.Slot slot}s with the method parameters.
- * This exception is thrown if the parameter is required.
- *
- * @see IntentRequest
+ * This exception occurred when expected {@link Slot slot} is missing. Handler methods may access {@link Slot
+ * slot}s with the method parameters. This exception is thrown if the parameter is required.
  */
 @LogLevel(ERROR)
 public class MissingSlotException extends MissingRequiredParamException {
@@ -36,11 +33,10 @@ public class MissingSlotException extends MissingRequiredParamException {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Constructs an exception with the {@link IntentRequest.Intent.Slot slot} name.
+     * Constructs an exception with the {@link Slot slot} name.
      *
-     * @param name The {@link IntentRequest.Intent.Slot slot} name.
-     *         This is not different from original one if the method argument specified context property name.
-     *         This value is prefer to method argument name.
+     * @param name The {@link Slot slot} name. This is not different from original one if the method argument
+     *             specified context property name. This value is prefer to method argument name.
      */
     public MissingSlotException(String name) {
         super(name);
@@ -48,7 +44,7 @@ public class MissingSlotException extends MissingRequiredParamException {
 
     @Override
     public String getMessage() {
-        return "Missing slot value. [slot name: " + getName() + "]";
+        return "Missing slot value. slot name: " + getName();
     }
 
 }
