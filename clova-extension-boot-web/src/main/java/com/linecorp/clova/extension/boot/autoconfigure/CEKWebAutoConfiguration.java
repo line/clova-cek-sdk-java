@@ -70,8 +70,8 @@ public class CEKWebAutoConfiguration {
 
     @Bean
     CEKResponseMessageValidationAdvice cekResponseMessageValidationAdvice(
-            @SuppressWarnings("SpringJavaAutowiringInspection") SmartValidator validator) {
-        return new CEKResponseMessageValidationAdvice(validator);
+            ObjectProvider<SmartValidator> validatorProvider) {
+        return new CEKResponseMessageValidationAdvice(validatorProvider.getObject());
     }
 
     @Bean
@@ -89,21 +89,22 @@ public class CEKWebAutoConfiguration {
     @ConditionalOnMissingBean(CEKHandleIntentController.class)
     CEKHandleIntentController cekHandleIntentController(
             CEKRequestProcessor requestProcessor,
-            @SuppressWarnings("SpringJavaAutowiringInspection") ObjectMapper objectMapper,
+            ObjectProvider<ObjectMapper> objectMapperProvider,
             CEKProperties cekProperties) {
-        return new CEKHandleIntentController(requestProcessor, objectMapper,
+        return new CEKHandleIntentController(requestProcessor, objectMapperProvider.getObject(),
                                              cekProperties.getClient().getDefaultLocale());
     }
 
     @Bean
     CEKRequestHandlerDispatcher cekRequestHandlerDispatcher(
             CEKRequestMappingHandlerMapping handlerMapping,
-            @SuppressWarnings("SpringJavaAutowiringInspection") SmartValidator validator,
-            @SuppressWarnings("SpringJavaAutowiringInspection") ObjectMapper objectMapper,
+            ObjectProvider<SmartValidator> validatorProvider,
+            ObjectProvider<ObjectMapper> objectMapperProvider,
             ObjectProvider<List<CEKRequestVerifier>> requestVerifiers,
             ObjectProvider<Map<String, CEKHandlerInterceptor>> handlerInterceptorMap) {
         CEKRequestHandlerDispatcher dispatcher =
-                new CEKRequestHandlerDispatcher(handlerMapping, validator, objectMapper);
+                new CEKRequestHandlerDispatcher(handlerMapping, validatorProvider.getObject(),
+                                                objectMapperProvider.getObject());
 
         Optional.ofNullable(requestVerifiers.getIfAvailable())
                 .filter(list -> !list.isEmpty())
@@ -143,13 +144,15 @@ public class CEKWebAutoConfiguration {
     static class ArgumentResolverConfig {
 
         @Bean
-        CEKContextPropertyArgumentResolver cekContextPropertyArgumentResolver(ObjectMapper objectMapper) {
-            return new CEKContextPropertyArgumentResolver(objectMapper);
+        CEKContextPropertyArgumentResolver cekContextPropertyArgumentResolver(
+                ObjectProvider<ObjectMapper> objectMapperProvider) {
+            return new CEKContextPropertyArgumentResolver(objectMapperProvider.getObject());
         }
 
         @Bean
-        CEKEventPayloadArgumentResolver cekEventPayloadArgumentResolver(ObjectMapper objectMapper) {
-            return new CEKEventPayloadArgumentResolver(objectMapper);
+        CEKEventPayloadArgumentResolver cekEventPayloadArgumentResolver(
+                ObjectProvider<ObjectMapper> objectMapperProvider) {
+            return new CEKEventPayloadArgumentResolver(objectMapperProvider.getObject());
         }
 
         @Bean
@@ -173,18 +176,21 @@ public class CEKWebAutoConfiguration {
         }
 
         @Bean
-        CEKSessionHolderArgumentResolver cekSessionHolderArgumentResolver(ObjectMapper objectMapper) {
-            return new CEKSessionHolderArgumentResolver(objectMapper);
+        CEKSessionHolderArgumentResolver cekSessionHolderArgumentResolver(
+                ObjectProvider<ObjectMapper> objectMapperProvider) {
+            return new CEKSessionHolderArgumentResolver(objectMapperProvider.getObject());
         }
 
         @Bean
-        CEKSessionValueArgumentResolver cekSessionValueArgumentResolver(ObjectMapper objectMapper) {
-            return new CEKSessionValueArgumentResolver(objectMapper);
+        CEKSessionValueArgumentResolver cekSessionValueArgumentResolver(
+                ObjectProvider<ObjectMapper> objectMapperProvider) {
+            return new CEKSessionValueArgumentResolver(objectMapperProvider.getObject());
         }
 
         @Bean
-        CEKSlotValueArgumentResolver cekSlotValueArgumentResolver(ObjectMapper objectMapper) {
-            return new CEKSlotValueArgumentResolver(objectMapper);
+        CEKSlotValueArgumentResolver cekSlotValueArgumentResolver(
+                ObjectProvider<ObjectMapper> objectMapperProvider) {
+            return new CEKSlotValueArgumentResolver(objectMapperProvider.getObject());
         }
 
         @Bean
