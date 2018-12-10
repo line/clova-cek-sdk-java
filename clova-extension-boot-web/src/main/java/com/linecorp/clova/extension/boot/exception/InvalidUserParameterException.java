@@ -47,4 +47,13 @@ public class InvalidUserParameterException extends RuntimeException {
         super(message, cause);
     }
 
+    /**
+     * Constructs an exception.
+     * <p>
+     * This method is for subclasses.
+     */
+    protected InvalidUserParameterException() {
+        super((String) null);
+    }
+
 }

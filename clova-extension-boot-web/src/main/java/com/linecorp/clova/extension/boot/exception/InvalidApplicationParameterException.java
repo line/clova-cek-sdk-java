@@ -55,7 +55,7 @@ public class InvalidApplicationParameterException extends RuntimeException {
      * This method is for subclasses.
      */
     protected InvalidApplicationParameterException() {
-        super();
+        super((String) null);
     }
 
 }

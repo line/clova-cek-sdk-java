@@ -21,10 +21,13 @@ import static com.linecorp.clova.extension.boot.util.InformationLevel.ERROR;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.linecorp.clova.extension.boot.handler.CEKHandlerMethod;
 import com.linecorp.clova.extension.boot.handler.interceptor.CEKHandlerInterceptor;
 import com.linecorp.clova.extension.boot.util.LogLevel;
+import com.linecorp.clova.extension.boot.util.StringUtils;
 
 /**
  * An exception for errors occurred while processing {@link CEKHandlerInterceptor}.
@@ -60,15 +63,20 @@ public class CEKHandlerInterceptException extends RuntimeException {
      * @param e             original occurred exception while processing {@link CEKHandlerInterceptor}.
      */
     public CEKHandlerInterceptException(CEKHandlerMethod handlerMethod, Object[] args, Exception e) {
-        super(e);
+        super(null, e);
         this.handlerMethod = handlerMethod;
         this.args = args != null ? Arrays.asList(args) : Collections.emptyList();
     }
 
     @Override
     public String getMessage() {
-        return "An error occurred while processing CEKHandlerInterceptor. " +
-               "[handlerMethod: " + this.handlerMethod + ", args:" + this.args + "]";
+        return Stream.<String>builder()
+                .add(super.getMessage())
+                .add("An error occurred while processing CEKHandlerInterceptor. " +
+                     "[handlerMethod: " + this.handlerMethod + " args:" + this.args + "]")
+                .build()
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.joining("\n"));
     }
 
 }
