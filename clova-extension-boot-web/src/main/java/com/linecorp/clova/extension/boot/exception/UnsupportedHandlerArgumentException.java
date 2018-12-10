@@ -18,6 +18,9 @@ package com.linecorp.clova.extension.boot.exception;
 
 import static com.linecorp.clova.extension.boot.util.InformationLevel.ERROR;
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.springframework.core.MethodParameter;
 
 import com.linecorp.clova.extension.boot.util.LogLevel;
@@ -41,11 +44,13 @@ public class UnsupportedHandlerArgumentException extends RuntimeException {
      * @param methodParam the expected {@link MethodParameter method parameter}
      */
     public UnsupportedHandlerArgumentException(MethodParameter methodParam) {
+        super((String) null);
         this.methodParam = methodParam;
     }
 
     /**
-     * Constructs an exception with the expected {@link MethodParameter method parameter} and the specified detail message.
+     * Constructs an exception with the expected {@link MethodParameter method parameter} and the specified
+     * detail message.
      *
      * @param methodParam the expected {@link MethodParameter method parameter}
      * @param message     detail message
@@ -57,8 +62,13 @@ public class UnsupportedHandlerArgumentException extends RuntimeException {
 
     @Override
     public String getMessage() {
-        return "Found unsupported handler's argument. ["
-               + StringUtils.methodParamToString(this.methodParam) + "]";
+        return Stream.<String>builder()
+                .add(super.getMessage())
+                .add("Found unsupported handler's argument. [" +
+                     StringUtils.methodParamToString(this.methodParam) + "]")
+                .build()
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.joining("\n"));
     }
 
 }
