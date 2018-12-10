@@ -662,9 +662,9 @@ public class CEKRequestHandlerDispatcherInterceptorTest {
                                     .method(dummyMethod)
                                     .name("Clova.Event")
                                     .methodParams(Arrays.asList(
-                                            MethodParameter.forExecutable(dummyMethod, 0),
-                                            MethodParameter.forExecutable(dummyMethod, 1),
-                                            MethodParameter.forExecutable(dummyMethod, 2)
+                                            new MethodParameter(dummyMethod, 0),
+                                            new MethodParameter(dummyMethod, 1),
+                                            new MethodParameter(dummyMethod, 2)
                                     ))
                                     .build());
 

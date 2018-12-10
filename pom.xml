@@ -73,6 +73,7 @@
     <module>clova-extension-boot-web</module>
     <module>clova-extension-test</module>
     <module>clova-extension-model</module>
+    <module>compatibility/test-spring-boot1</module>
   </modules>
 
   <distributionManagement>
