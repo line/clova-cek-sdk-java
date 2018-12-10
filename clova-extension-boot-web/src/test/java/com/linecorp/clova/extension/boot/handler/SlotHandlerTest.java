@@ -560,7 +560,7 @@ public class SlotHandlerTest {
 
     @Test
     public void handleOptionalLocalDateIntervalSlot() throws Exception {
-        LocalDate start = LocalDate.now().minusDays(random.nextInt(20));
+        LocalDate start = LocalDate.now().minusDays(random.nextInt(20) + 1);
         LocalDate end = LocalDate.now().plusDays(random.nextInt(20));
 
         String body = CEKRequestGenerator.requestBodyBuilder()
@@ -589,7 +589,7 @@ public class SlotHandlerTest {
     @Test
     public void handleOptionalLocalTimeIntervalSlotValue() throws Exception {
         LocalTime start = LocalTime.now()
-                                   .minusMinutes(random.nextInt(20))
+                                   .minusMinutes(random.nextInt(20) + 1)
                                    .truncatedTo(ChronoUnit.SECONDS);
         LocalTime end = LocalTime.now().plusMinutes(random.nextInt(20))
                                  .truncatedTo(ChronoUnit.SECONDS);
@@ -618,7 +618,7 @@ public class SlotHandlerTest {
     @Test
     public void handleOffsetDateTimeIntervalSlot() throws Exception {
         OffsetDateTime start = OffsetDateTime.now()
-                                             .minusDays(random.nextInt(10))
+                                             .minusDays(random.nextInt(10) + 1)
                                              .truncatedTo(ChronoUnit.SECONDS)
                                              .withOffsetSameInstant(ZoneOffset.ofHours(9));
         OffsetDateTime end = OffsetDateTime.now()
