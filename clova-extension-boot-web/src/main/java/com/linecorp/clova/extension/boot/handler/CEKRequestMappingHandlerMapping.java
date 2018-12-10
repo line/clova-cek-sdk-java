@@ -130,14 +130,14 @@ public class CEKRequestMappingHandlerMapping implements BeanFactoryAware, Initia
                                                 + "method:" + method + "]");
             }
 
-            MethodParameter returnType = MethodParameter.forExecutable(method, -1);
+            MethodParameter returnType = new MethodParameter(method, -1);
             if (!CEKResponse.class.isAssignableFrom(returnType.getParameterType())) {
                 throw new UnsupportedHandlerArgumentException(returnType, "Unsupported type method returns.");
             }
 
             List<MethodParameter> methodParams =
                     IntStream.range(0, method.getParameterCount())
-                             .mapToObj(paramIndex -> MethodParameter.forExecutable(method, paramIndex))
+                             .mapToObj(paramIndex -> new MethodParameter(method, paramIndex))
                              .peek(methodParam -> methodParam.initParameterNameDiscovery(
                                      PARAMETER_NAME_DISCOVERER))
                              .collect(toList());
