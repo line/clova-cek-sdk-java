@@ -26,26 +26,24 @@ import com.linecorp.clova.extension.boot.message.request.CEKRequestMessage;
 /**
  * CEK request verifier.
  * <p>
- * The class implements this interface are called automatically, if it's register to Spring DI container as Bean.
+ * The class implements this interface are called automatically, if it's register to Spring DI container as
+ * Bean.
  *
  * @see CEKRequestSignatureVerifier
  * @see CEKRequestHandlerDispatcher
  * @see CEKWebAutoConfiguration#cekRequestHandlerDispatcher(com.linecorp.clova.extension.boot.handler.CEKRequestMappingHandlerMapping,
- *         org.springframework.validation.SmartValidator,
- *         com.fasterxml.jackson.databind.ObjectMapper,
- *         org.springframework.beans.factory.ObjectProvider,
- *         org.springframework.beans.factory.ObjectProvider)
+ * org.springframework.beans.factory.ObjectProvider, org.springframework.beans.factory.ObjectProvider,
+ * org.springframework.beans.factory.ObjectProvider, org.springframework.beans.factory.ObjectProvider)
  */
 public interface CEKRequestVerifier {
 
     /**
      * Verifies CEK request.
      *
-     * @param request {@link HttpServletRequest}
+     * @param request        {@link HttpServletRequest}
      * @param requestMessage {@link CEKRequestMessage}
-     * @param requestJson request body, should be json text
-     * @param system the context information of the client system
-     *
+     * @param requestJson    request body, should be json text
+     * @param system         the context information of the client system
      * @throws SecurityException the request is invalid.
      */
     void verify(HttpServletRequest request, CEKRequestMessage requestMessage, String requestJson,
