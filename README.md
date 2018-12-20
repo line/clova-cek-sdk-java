@@ -31,7 +31,7 @@ Add as a dependency to `pom.xml` as follows.
 <dependency>
   <groupId>com.linecorp.clova</groupId>
   <artifactId>clova-extension-boot-web</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 
@@ -41,7 +41,7 @@ Add as a dependency to `build.gradle` as follows.
 
 ```groovy
 dependencies {
-   compile('com.linecorp.clova:clova-extension-boot-web:1.0.0')
+   compile('com.linecorp.clova:clova-extension-boot-web:1.1.0')
 }
 ```
 
