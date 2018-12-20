@@ -35,6 +35,7 @@ import org.springframework.validation.SmartValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.linecorp.clova.extension.boot.config.CEKFilterConfig;
 import com.linecorp.clova.extension.boot.config.CEKProperties;
 import com.linecorp.clova.extension.boot.config.CEKRequestVerificationConfig;
 import com.linecorp.clova.extension.boot.controller.CEKHandleIntentController;
@@ -64,7 +65,7 @@ import com.linecorp.clova.extension.boot.verifier.CEKRequestVerifier;
  * {@link EnableAutoConfiguration Auto-configuration} for Clova Extension Boot.
  */
 @Configuration
-@Import(CEKRequestVerificationConfig.class)
+@Import({CEKRequestVerificationConfig.class, CEKFilterConfig.class})
 @EnableConfigurationProperties(CEKProperties.class)
 public class CEKWebAutoConfiguration {
 
