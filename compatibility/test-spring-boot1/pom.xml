@@ -27,7 +27,7 @@
   <groupId>com.linecorp.clova</groupId>
   <artifactId>test-spring-boot1</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
   <name>test-spring-boot1</name>
   <description>Tests for Spring Boot1</description>
 
@@ -134,10 +134,6 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>
