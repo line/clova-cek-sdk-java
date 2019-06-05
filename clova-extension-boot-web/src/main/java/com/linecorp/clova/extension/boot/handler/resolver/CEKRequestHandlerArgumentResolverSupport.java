@@ -43,6 +43,7 @@ import com.linecorp.clova.extension.boot.util.StringUtils;
 
 import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -66,6 +67,7 @@ public abstract class CEKRequestHandlerArgumentResolverSupport implements CEKReq
         CAMEL_CONVERTERS_BY_CONDITION.put(StringUtils::isUpperKebabCase, StringUtils::upperKebabToCamel);
     }
 
+    @Getter(AccessLevel.PROTECTED)
     private final ObjectMapper objectMapper;
 
     /**

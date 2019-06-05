@@ -42,6 +42,7 @@ public class Slot<T> implements Serializable {
     @NotBlank
     private String name;
     private T value;
+    private String unit;
     private SlotValueType valueType;
 
     /**
@@ -55,6 +56,7 @@ public class Slot<T> implements Serializable {
         Slot<R> slot = new Slot<>();
         slot.setName(this.name);
         slot.setValue(value);
+        slot.setUnit(this.unit);
         slot.setValueType(this.valueType);
         return slot;
     }

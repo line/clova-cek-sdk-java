@@ -263,9 +263,14 @@ public class CEKRequestGenerator {
             return this;
         }
 
+        public RequestBodyBuilder slot(String name, Object value, Object unit) {
+            this.additionalObjects.put("$.request.intent.slots." + name, new Slot(name, value, unit));
+            return this;
+        }
+
         public RequestBodyBuilder slot(String name, Object value, SlotValueType valueType) {
             this.additionalObjects.put("$.request.intent.slots." + name,
-                                       new Slot(name, value, valueType.getName()));
+                                       new Slot(name, value, valueType));
             return this;
         }
 
@@ -429,7 +434,20 @@ public class CEKRequestGenerator {
 
         private String name;
         private Object value;
-        private String valueType;
+        private Object unit;
+        private SlotValueType valueType;
+
+        Slot(String name, Object value, Object unit) {
+            this.name = name;
+            this.value = value;
+            this.unit = unit;
+        }
+
+        Slot(String name, Object value, SlotValueType valueType) {
+            this.name = name;
+            this.value = value;
+            this.valueType = valueType;
+        }
 
         @SuppressWarnings({ "rawtypes", "unchecked" })
         Slot(String name, Object value) {
@@ -454,7 +472,7 @@ public class CEKRequestGenerator {
                           } else if (this.value instanceof SlotValueInterval) {
                               this.value = valueType.format((SlotValueInterval) this.value);
                           }
-                          this.valueType = valueType.getName();
+                          this.valueType = valueType;
                       });
             }
         }
