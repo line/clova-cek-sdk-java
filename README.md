@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/line/clova-cek-sdk-java.svg?branch=master)](https://travis-ci.org/line/clova-cek-sdk-java)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.linecorp.clova/clova-extension-boot-web/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.linecorp.clova/clova-extension-boot-web)
-[![javadoc.io](https://javadocio-badges.herokuapp.com/com.linecorp.clova/clova-extension-boot-web/badge.svg)](https://javadocio-badges.herokuapp.com/com.linecorp.clova/clova-extension-boot-web)
+[![Javadocs](https://www.javadoc.io/badge/com.linecorp.clova/clova-extension-boot-web.svg)](https://www.javadoc.io/doc/com.linecorp.clova/clova-extension-boot-web)
 
 
 This repository contains Java libraries for development of Clova extensions using the Clova Extensions Kit(CEK).
